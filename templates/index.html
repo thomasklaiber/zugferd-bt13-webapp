@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ZUGFeRD BT-13 Einfügen</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f0f2f5;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px rgba(0,0,0,.08);
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 520px;
+    }
+    h1 { font-size: 1.4rem; font-weight: 700; color: #1a1a2e; margin-bottom: .5rem; }
+    .subtitle { font-size: .9rem; color: #666; margin-bottom: 2rem; }
+    .badge {
+      display: inline-block; background: #e8f4fd; color: #1a73e8;
+      font-size: .75rem; font-weight: 600; border-radius: 4px;
+      padding: 2px 8px; margin-left: .5rem; vertical-align: middle;
+    }
+    label { display: block; font-size: .85rem; font-weight: 600; color: #333; margin-bottom: .4rem; }
+    .field { margin-bottom: 1.4rem; }
+    .drop-zone {
+      border: 2px dashed #c0c9d4; border-radius: 8px; padding: 2rem;
+      text-align: center; cursor: pointer; transition: border-color .2s, background .2s;
+      color: #888; font-size: .9rem;
+    }
+    .drop-zone.hover, .drop-zone.has-file { border-color: #1a73e8; background: #f0f7ff; }
+    .drop-zone input[type="file"] { display: none; }
+    .drop-zone .icon { font-size: 2rem; margin-bottom: .5rem; }
+    .drop-zone .file-name { font-weight: 600; color: #1a1a2e; font-size: .95rem; margin-top: .3rem; }
+    input[type="text"] {
+      width: 100%; padding: .65rem .9rem; border: 1.5px solid #c0c9d4;
+      border-radius: 8px; font-size: .95rem; transition: border-color .2s;
+    }
+    input[type="text"]:focus { outline: none; border-color: #1a73e8; }
+    .hint { font-size: .78rem; color: #888; margin-top: .35rem; }
+    button[type="submit"] {
+      width: 100%; padding: .8rem; background: #1a73e8; color: #fff;
+      border: none; border-radius: 8px; font-size: 1rem; font-weight: 600;
+      cursor: pointer; transition: background .2s;
+    }
+    button[type="submit"]:hover:not(:disabled) { background: #1557b0; }
+    button[type="submit"]:disabled { background: #a0bde8; cursor: not-allowed; }
+    .status {
+      margin-top: 1.2rem; padding: .8rem 1rem; border-radius: 8px;
+      font-size: .88rem; display: none;
+    }
+    .status.error { background: #fdecea; color: #c0392b; display: block; }
+    .status.success { background: #e8f8f0; color: #27ae60; display: block; }
+    .status.loading { background: #f0f7ff; color: #1a73e8; display: block; }
+    .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid #1a73e8;
+      border-top-color: transparent; border-radius: 50%; animation: spin .7s linear infinite;
+      vertical-align: middle; margin-right: .4rem; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+<div class="card">
+  <h1>ZUGFeRD BT-13 Einfügen <span class="badge">Factur-X</span></h1>
+  <p class="subtitle">Fügt das Feld <strong>BT-13 (BuyerOrderReference)</strong> in den eingebetteten XML-Teil einer ZUGFeRD/Factur-X PDF ein.</p>
+
+  <form id="form">
+    <div class="field">
+      <label>ZUGFeRD PDF-Rechnung</label>
+      <div class="drop-zone" id="dropZone">
+        <input type="file" id="pdfInput" name="pdf" accept=".pdf" />
+        <div class="icon">📄</div>
+        <div>PDF hierher ziehen oder <u>auswählen</u></div>
+        <div class="file-name" id="fileName"></div>
+      </div>
+    </div>
+    <div class="field">
+      <label for="bt13">BT-13 – Bestellnummer (BuyerOrderReference)</label>
+      <input type="text" id="bt13" name="bt13" placeholder="z. B. 4400378488" autocomplete="off" />
+      <p class="hint">Die Bestellnummer des Käufers, wie sie im Einkaufssystem hinterlegt ist.</p>
+    </div>
+    <button type="submit" id="submitBtn">PDF verarbeiten &amp; herunterladen</button>
+  </form>
+  <div class="status" id="status"></div>
+</div>
+
+<script>
+  const dropZone = document.getElementById('dropZone');
+  const pdfInput = document.getElementById('pdfInput');
+  const fileName = document.getElementById('fileName');
+  const form     = document.getElementById('form');
+  const status   = document.getElementById('status');
+  const submitBtn = document.getElementById('submitBtn');
+
+  dropZone.addEventListener('click', () => pdfInput.click());
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('hover'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('hover'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault(); dropZone.classList.remove('hover');
+    const file = e.dataTransfer.files[0];
+    if (file && file.name.endsWith('.pdf')) {
+      setFile(file);
+    }
+  });
+  pdfInput.addEventListener('change', () => { if (pdfInput.files[0]) setFile(pdfInput.files[0]); });
+
+  function setFile(file) {
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    pdfInput.files = dt.files;
+    fileName.textContent = file.name;
+    dropZone.classList.add('has-file');
+  }
+
+  function showStatus(type, msg) {
+    status.className = 'status ' + type;
+    status.innerHTML = (type === 'loading' ? '<span class="spinner"></span>' : '') + msg;
+  }
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    const file = pdfInput.files[0];
+    const bt13 = document.getElementById('bt13').value.trim();
+
+    if (!file) return showStatus('error', 'Bitte eine PDF-Datei auswählen.');
+    if (!bt13)  return showStatus('error', 'Bitte einen BT-13 Wert eingeben.');
+
+    const data = new FormData();
+    data.append('pdf', file);
+    data.append('bt13', bt13);
+
+    submitBtn.disabled = true;
+    showStatus('loading', 'Verarbeite PDF…');
+
+    try {
+      const resp = await fetch('/process', { method: 'POST', body: data });
+      if (resp.ok) {
+        const blob = await resp.blob();
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href = url;
+        a.download = file.name.replace('.pdf', '_bt13.pdf');
+        a.click();
+        URL.revokeObjectURL(url);
+        showStatus('success', '✅ Fertig! Die PDF wurde mit BT-13 ergänzt und heruntergeladen.');
+      } else {
+        const err = await resp.json();
+        showStatus('error', '⚠️ ' + (err.error || 'Unbekannter Fehler.'));
+      }
+    } catch (err) {
+      showStatus('error', '⚠️ Netzwerkfehler: ' + err.message);
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>
