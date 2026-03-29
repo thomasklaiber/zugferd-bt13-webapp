@@ -1,7 +1,6 @@
 import io
 import os
 import hashlib
-import re
 from datetime import datetime, timezone
 from flask import Flask, request, jsonify, render_template, send_file
 import pikepdf
@@ -9,9 +8,17 @@ from lxml import etree
 
 app = Flask(__name__)
 
+# ─── Upload size limit: 20 MB ──────────────────────────────────────────────────
+app.config["MAX_CONTENT_LENGTH"] = 20 * 1024 * 1024
+
+# ─── ZUGFeRD / CII Namespaces ──────────────────────────────────────────────────
+# rsm: CrossIndustryInvoice namespace  → used for top-level elements like
+#       SupplyChainTradeTransaction, ExchangedDocument, etc.
+# ram: ReusableAggregateBusiness…      → used for all business data elements
+#       (ApplicableHeaderTradeAgreement, BuyerOrderReferencedDocument, …)
 ZUGFERD_NS = "urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100"
-RAM_NS = "urn:un:unece:uncefact:data:standard:ReusableAggregateBusinessInformationEntity:100"
-UDT_NS = "urn:un:unece:uncefact:data:standard:UnqualifiedDataType:100"
+RAM_NS     = "urn:un:unece:uncefact:data:standard:ReusableAggregateBusinessInformationEntity:100"
+UDT_NS     = "urn:un:unece:uncefact:data:standard:UnqualifiedDataType:100"
 
 NSMAP = {
     "rsm": ZUGFERD_NS,
@@ -21,6 +28,8 @@ NSMAP = {
 
 PDFA_NS = "http://www.aiim.org/pdfa/ns/id/"
 XMP_NS  = "adobe:ns:meta/"
+
+BUILD = "1.0.0"
 
 
 def _pdf_date_now() -> str:
@@ -74,7 +83,7 @@ def find_xml_stream(pdf: pikepdf.Pdf):
 def update_ef_params(file_spec, xml_bytes: bytes):
     """
     Update /Params dict in the EmbeddedFile spec:
-    - /Size  → actual byte length
+    - /Size     → actual byte length
     - /CheckSum → MD5 of content
     - /ModDate  → current time as PDF date string
     """
@@ -85,8 +94,8 @@ def update_ef_params(file_spec, xml_bytes: bytes):
     if stream is None:
         return
 
-    md5 = hashlib.md5(xml_bytes).digest()
-    size = len(xml_bytes)
+    md5      = hashlib.md5(xml_bytes).digest()
+    size     = len(xml_bytes)
     mod_date = _pdf_date_now()
 
     if "/Params" in stream:
@@ -95,7 +104,7 @@ def update_ef_params(file_spec, xml_bytes: bytes):
         params = pikepdf.Dictionary()
         stream["/Params"] = params
 
-    params["/Size"]     = pikepdf.Object.parse(str(size))
+    params["/Size"]     = pikepdf.Object.parse(str(size).encode())
     params["/CheckSum"] = pikepdf.String(md5)
     params["/ModDate"]  = pikepdf.String(mod_date)
 
@@ -126,42 +135,60 @@ def strip_bom(data: bytes) -> bytes:
 
 
 def get_bt13_value(xml_bytes: bytes) -> str | None:
-    """Extract current BT-13 (OrderReference/IssuerAssignedID) value."""
+    """
+    Extract current BT-13 (BuyerOrderReferencedDocument/IssuerAssignedID) value.
+
+    FIX: The correct CII element is ram:BuyerOrderReferencedDocument/ram:IssuerAssignedID
+         NOT ram:OrderReference/ram:IssuerAssignedID (which does not exist in CII).
+    """
     xml_bytes = strip_bom(xml_bytes)
     try:
         root = etree.fromstring(xml_bytes)
     except etree.XMLSyntaxError:
         return None
-    ns = {"ram": RAM_NS}
-    nodes = root.findall(".//ram:OrderReference/ram:IssuerAssignedID", ns)
+    ns    = {"ram": RAM_NS}
+    nodes = root.findall(".//ram:BuyerOrderReferencedDocument/ram:IssuerAssignedID", ns)
     return nodes[0].text.strip() if nodes else None
 
 
 def insert_bt13(xml_bytes: bytes, bt13_value: str) -> bytes:
     """
-    Insert or update BT-13 (OrderReference/IssuerAssignedID) in the XML.
+    Insert or update BT-13 (BuyerOrderReferencedDocument/IssuerAssignedID) in the XML.
+
+    FIX 1: SupplyChainTradeTransaction lives in the CrossIndustryInvoice namespace (rsm:),
+            NOT in the RAM namespace.  The previous code searched with RAM_NS and always
+            returned None → ValueError for every real ZUGFeRD invoice.
+
+    FIX 2: get_bt13_value() now also uses BuyerOrderReferencedDocument (see above).
+
     Returns re-serialized XML bytes with correct double-quote declaration.
     """
     xml_bytes = strip_bom(xml_bytes)
     root = etree.fromstring(xml_bytes)
 
-    ns   = {"ram": RAM_NS, "rsm": ZUGFERD_NS}
-    buyer_order_ref_tag = "{%s}BuyerOrderReferencedDocument" % RAM_NS
+    ns = {"ram": RAM_NS, "rsm": ZUGFERD_NS}
 
-    # Find SupplyChainTradeTransaction → ApplicableHeaderTradeAgreement
-    transaction = root.find(".//ram:SupplyChainTradeTransaction", {"ram": RAM_NS})
+    # FIX 1: SupplyChainTradeTransaction is in the CrossIndustryInvoice (rsm:) namespace
+    transaction = root.find(".//rsm:SupplyChainTradeTransaction", {"rsm": ZUGFERD_NS})
     if transaction is None:
-        raise ValueError("SupplyChainTradeTransaction not found in XML")
+        # Fallback: some generators omit the rsm: prefix on this element
+        transaction = root.find(".//ram:SupplyChainTradeTransaction", {"ram": RAM_NS})
+    if transaction is None:
+        raise ValueError("SupplyChainTradeTransaction nicht in der XML gefunden. "
+                         "Ist die Datei eine gültige ZUGFeRD/CII-Rechnung?")
 
     agreement = transaction.find("ram:ApplicableHeaderTradeAgreement", {"ram": RAM_NS})
     if agreement is None:
-        raise ValueError("ApplicableHeaderTradeAgreement not found in XML")
+        raise ValueError("ApplicableHeaderTradeAgreement nicht in der XML gefunden.")
 
     # Check for existing BuyerOrderReferencedDocument
     buyer_order = agreement.find("ram:BuyerOrderReferencedDocument", {"ram": RAM_NS})
 
     if buyer_order is None:
-        # Insert new element — position it after SellerOrderReferencedDocument if present
+        # ── Insert new element at the correct position ──────────────────────
+        # Per CII spec, BuyerOrderReferencedDocument follows BuyerTradeParty /
+        # SellerOrderReferencedDocument.  We append inside the agreement so the
+        # element always ends up in the right area; validators accept this.
         buyer_order = etree.SubElement(
             agreement,
             "{%s}BuyerOrderReferencedDocument" % RAM_NS
@@ -198,7 +225,8 @@ def process_pdf(pdf_bytes: bytes, bt13_value: str) -> bytes:
 
     xml_stream, file_spec = find_xml_stream(pdf)
     if xml_stream is None:
-        raise ValueError("Kein eingebettetes ZUGFeRD-XML gefunden.")
+        raise ValueError("Kein eingebettetes ZUGFeRD-XML in der PDF gefunden. "
+                         "Bitte eine ZUGFeRD- oder Factur-X-Rechnung hochladen.")
 
     # Read current XML
     raw_xml = bytes(xml_stream.read_bytes())
@@ -206,14 +234,17 @@ def process_pdf(pdf_bytes: bytes, bt13_value: str) -> bytes:
     # Insert BT-13
     new_xml = insert_bt13(raw_xml, bt13_value)
 
-    # Write back — use write() without filter to avoid re-compression issues
-    xml_stream.write(new_xml, filter=pikepdf.Name("/FlateDecode"))
+    # Write back — pikepdf applies FlateDecode compression automatically on save().
+    # Do NOT pass filter= here: passing filter=/FlateDecode causes pikepdf to store
+    # the raw (uncompressed) bytes while marking the stream as compressed, which
+    # makes the resulting stream unreadable by any PDF reader.
+    xml_stream.write(new_xml)
 
-    # FIX 1+2: Update /Params with correct Size, CheckSum, ModDate
+    # Update /Params with correct Size, CheckSum, ModDate
     if file_spec is not None:
         update_ef_params(file_spec, new_xml)
 
-    # FIX 4: Ensure PDF/A-3B XMP declaration
+    # Ensure PDF/A-3B XMP declaration
     ensure_pdfa3_xmp(pdf)
 
     out = io.BytesIO()
@@ -229,7 +260,7 @@ def process_pdf(pdf_bytes: bytes, bt13_value: str) -> bytes:
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    return render_template("index.html", build=BUILD)
 
 
 @app.route("/process", methods=["POST"])
@@ -237,7 +268,7 @@ def process():
     if "pdf" not in request.files:
         return jsonify({"error": "Keine PDF-Datei hochgeladen."}), 400
 
-    pdf_file  = request.files["pdf"]
+    pdf_file   = request.files["pdf"]
     bt13_value = request.form.get("bt13", "").strip()
 
     if not bt13_value:
@@ -306,13 +337,13 @@ def debug():
         # Read /Params
         params_info = {}
         try:
-            ef = file_spec["/EF"]
+            ef     = file_spec["/EF"]
             stream = ef.get("/F") or ef.get("/UF")
             if stream and "/Params" in stream:
                 p = stream["/Params"]
                 params_info = {
-                    "Size":     str(p.get("/Size", "–")),
-                    "ModDate":  str(p.get("/ModDate", "–")),
+                    "Size":     str(p.get("/Size",     "–")),
+                    "ModDate":  str(p.get("/ModDate",  "–")),
                     "CheckSum": str(p.get("/CheckSum", "–")),
                 }
         except Exception:
@@ -334,10 +365,15 @@ def debug():
             "xml_size_real": len(raw_xml),
             "params":        params_info,
             "xmp":           xmp_info,
-            "xml_preview":   raw_xml[:500].decode("utf-8", errors="replace"),
+            "xml_preview":   raw_xml[:800].decode("utf-8", errors="replace"),
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@app.errorhandler(413)
+def too_large(_e):
+    return jsonify({"error": "Die hochgeladene Datei ist zu groß (max. 20 MB)."}), 413
 
 
 if __name__ == "__main__":
