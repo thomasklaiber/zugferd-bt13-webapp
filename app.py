@@ -1,291 +1,344 @@
-from flask import Flask, request, send_file, render_template, jsonify
-import pikepdf
 import io
+import os
 import hashlib
+import re
 from datetime import datetime, timezone
+from flask import Flask, request, jsonify, render_template, send_file
+import pikepdf
 from lxml import etree
 
 app = Flask(__name__)
 
-NS_RAM = 'urn:un:unece:uncefact:data:standard:ReusableAggregateBusinessInformationEntity:100'
+ZUGFERD_NS = "urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100"
+RAM_NS = "urn:un:unece:uncefact:data:standard:ReusableAggregateBusinessInformationEntity:100"
+UDT_NS = "urn:un:unece:uncefact:data:standard:UnqualifiedDataType:100"
 
-BEFORE_BT13 = [
-    f'{{{NS_RAM}}}SellerTradeParty',
-    f'{{{NS_RAM}}}BuyerTradeParty',
-    f'{{{NS_RAM}}}BuyerRequisitionerTradeParty',
-    f'{{{NS_RAM}}}SellerTaxRepresentativeTradeParty',
-    f'{{{NS_RAM}}}SellerOrderReferencedDocument',
-]
+NSMAP = {
+    "rsm": ZUGFERD_NS,
+    "ram": RAM_NS,
+    "udt": UDT_NS,
+}
 
-AFTER_BT13 = [
-    f'{{{NS_RAM}}}ContractReferencedDocument',
-    f'{{{NS_RAM}}}AdditionalReferencedDocument',
-    f'{{{NS_RAM}}}SpecifiedProcuringProject',
-]
+PDFA_NS = "http://www.aiim.org/pdfa/ns/id/"
+XMP_NS  = "adobe:ns:meta/"
 
 
-# ── PDF helper ─────────────────────────────────────────────────────────
+def _pdf_date_now() -> str:
+    """Return current time as PDF date string: D:YYYYMMDDHHmmSS+HH'mm'"""
+    now = datetime.now(timezone.utc)
+    return now.strftime("D:%Y%m%d%H%M%S+00'00'")
 
-def collect_ef_pairs(node):
-    """Rekursiv EmbeddedFiles-Namensbaum (flat Array oder B-Tree) einlesen."""
-    pairs = []
-    if '/Names' in node:
-        arr = node['/Names']
-        for i in range(0, len(arr) - 1, 2):
-            pairs.append((str(arr[i]), arr[i + 1]))
-    if '/Kids' in node:
-        for kid in node['/Kids']:
-            pairs.extend(collect_ef_pairs(kid))
-    return pairs
+
+def serialize_xml(root) -> bytes:
+    """Serialize lxml element with proper double-quote XML declaration."""
+    body = etree.tostring(root, encoding="UTF-8", xml_declaration=False, pretty_print=True)
+    return b'<?xml version="1.0" encoding="UTF-8"?>\n' + body
 
 
 def find_xml_stream(pdf: pikepdf.Pdf):
-    """Gibt (filename, file_spec, stream) des eingebetteten ZUGFeRD-XML zurück."""
+    """
+    Locate the ZUGFeRD/Factur-X XML stream inside the PDF's embedded files.
+    Returns (stream_object, file_spec_object) or (None, None).
+    """
     try:
-        ef_root = pdf.Root.Names.EmbeddedFiles
+        names = pdf.Root.Names
     except AttributeError:
-        raise ValueError(
-            'Keine EmbeddedFiles im PDF gefunden. '
-            'Bitte prüfen Sie, ob es sich um eine ZUGFeRD/Factur-X Rechnung handelt.'
-        )
+        return None, None
 
-    pairs = collect_ef_pairs(ef_root)
-    if not pairs:
-        raise ValueError('EmbeddedFiles-Namensbaum ist leer.')
+    if "/EmbeddedFiles" not in names:
+        return None, None
 
-    xml_pairs = [(fn, fs) for fn, fs in pairs if fn.lower().endswith('.xml')]
-    if not xml_pairs:
-        raise ValueError(
-            f'Keine XML-Datei eingebettet. Gefundene Dateien: {[fn for fn, _ in pairs]}'
-        )
+    ef_names = names["/EmbeddedFiles"]
 
-    preferred = ['factur-x.xml', 'zugferd-invoice.xml', 'xrechnung.xml']
-    for pref in preferred:
-        for fn, fs in xml_pairs:
-            if fn.lower() == pref.lower():
-                return fn, fs, _get_ef_stream(fs)
+    def traverse(node):
+        """Recursively walk /Names and /Kids arrays."""
+        if "/Names" in node:
+            name_array = node["/Names"]
+            for i in range(0, len(name_array) - 1, 2):
+                file_spec = name_array[i + 1]
+                if "/EF" in file_spec:
+                    ef = file_spec["/EF"]
+                    stream = ef.get("/F") or ef.get("/UF")
+                    if stream is not None:
+                        return stream, file_spec
+        if "/Kids" in node:
+            for kid in node["/Kids"]:
+                result = traverse(kid)
+                if result[0] is not None:
+                    return result
+        return None, None
 
-    fn, fs = xml_pairs[0]
-    return fn, fs, _get_ef_stream(fs)
-
-
-def _get_ef_stream(file_spec):
-    for keys in (('/EF', '/F'), ('/EF', '/UF')):
-        try:
-            node = file_spec
-            for k in keys:
-                node = node[k]
-            return node
-        except (KeyError, TypeError):
-            continue
-    try:
-        return file_spec.EF.F
-    except AttributeError:
-        raise ValueError('Kein EF/F-Stream im FileSpec gefunden.')
+    return traverse(ef_names)
 
 
-def _pdf_date(dt: datetime) -> str:
-    """Formatiert Datum als PDF-Datumsstring D:YYYYMMDDHHmmSSOHH'mm'"""
-    tz = dt.strftime('%z')
-    if tz:
-        sign = tz[0]
-        h, m = tz[1:3], tz[3:5]
-        tz_str = f"{sign}{h}'{m}'"
+def update_ef_params(file_spec, xml_bytes: bytes):
+    """
+    Update /Params dict in the EmbeddedFile spec:
+    - /Size  → actual byte length
+    - /CheckSum → MD5 of content
+    - /ModDate  → current time as PDF date string
+    """
+    if "/EF" not in file_spec:
+        return
+    ef = file_spec["/EF"]
+    stream = ef.get("/F") or ef.get("/UF")
+    if stream is None:
+        return
+
+    md5 = hashlib.md5(xml_bytes).digest()
+    size = len(xml_bytes)
+    mod_date = _pdf_date_now()
+
+    if "/Params" in stream:
+        params = stream["/Params"]
     else:
-        tz_str = "Z"
-    return dt.strftime(f"D:%Y%m%d%H%M%S") + tz_str
+        params = pikepdf.Dictionary()
+        stream["/Params"] = params
+
+    params["/Size"]     = pikepdf.Object.parse(str(size))
+    params["/CheckSum"] = pikepdf.String(md5)
+    params["/ModDate"]  = pikepdf.String(mod_date)
 
 
-def update_ef_params(stream, new_content: bytes):
+def ensure_pdfa3_xmp(pdf: pikepdf.Pdf):
     """
-    Aktualisiert /Params (Size, CheckSum, ModDate) nach Änderung des Stream-Inhalts.
-    Pflicht für PDF/A-3 Konformität.
+    Ensure the PDF XMP metadata declares PDF/A-3B conformance.
+    Sets pdfaid:part=3 and pdfaid:conformance=B if missing or wrong.
     """
     try:
-        sd = stream.stream_dict
-        if '/Params' not in sd:
-            return
-
-        params = sd['/Params']
-        now_str = _pdf_date(datetime.now(timezone.utc))
-
-        # /Size = unkomprimierte Bytegröße des Inhalts
-        try:
-            params['/Size'] = len(new_content)
-        except Exception:
-            pass
-
-        # /CheckSum = MD5-Hash des unkomprimierten Inhalts
-        try:
-            params['/CheckSum'] = pikepdf.String(hashlib.md5(new_content).digest())
-        except Exception:
-            pass
-
-        # /ModDate aktualisieren
-        try:
-            params['/ModDate'] = pikepdf.String(now_str)
-        except Exception:
-            pass
-
-    except Exception:
-        pass  # /Params-Update ist Best-Effort; fehlschlagen ist besser als Absturz
+        with pdf.open_metadata() as meta:
+            part = meta.get("{%s}part" % PDFA_NS)
+            conf = meta.get("{%s}conformance" % PDFA_NS)
+            if part != "3" or conf != "B":
+                meta["{%s}part" % PDFA_NS]        = "3"
+                meta["{%s}conformance" % PDFA_NS] = "B"
+    except Exception as e:
+        app.logger.warning("XMP update failed: %s", e)
 
 
-# ── XML helper ──────────────────────────────────────────────────────────
+def strip_bom(data: bytes) -> bytes:
+    """Remove UTF-8 or UTF-16 BOM if present."""
+    if data.startswith(b"\xef\xbb\xbf"):
+        return data[3:]
+    if data.startswith(b"\xff\xfe") or data.startswith(b"\xfe\xff"):
+        return data[2:]
+    return data
 
-def parse_xml(raw: bytes) -> etree._Element:
-    """Parst XML-Bytes; entfernt BOM und normalisiert Encoding."""
-    for bom in (b'\xef\xbb\xbf', b'\xff\xfe', b'\xfe\xff'):
-        if raw.startswith(bom):
-            raw = raw[len(bom):]
-            break
+
+def get_bt13_value(xml_bytes: bytes) -> str | None:
+    """Extract current BT-13 (OrderReference/IssuerAssignedID) value."""
+    xml_bytes = strip_bom(xml_bytes)
     try:
-        return etree.fromstring(raw)
-    except etree.XMLSyntaxError as e:
-        try:
-            return etree.fromstring(raw.decode('utf-8', errors='replace').encode('utf-8'))
-        except Exception:
-            raise ValueError(f'XML-Parsing fehlgeschlagen: {e}')
-
-
-def serialize_xml(root: etree._Element) -> bytes:
-    """
-    Serialisiert zurück zu bytes.
-    Wichtig: encoding='unicode' + manuelle Deklaration mit DOPPELTEN Anführungszeichen.
-    lxml's xml_declaration=True verwendet einfache Anführungszeichen — das verletzt
-    einige strikte ZUGFeRD-Validatoren.
-    """
-    body = etree.tostring(root, encoding='unicode', xml_declaration=False, pretty_print=False)
-    return b'<?xml version="1.0" encoding="UTF-8"?>\n' + body.encode('UTF-8')
+        root = etree.fromstring(xml_bytes)
+    except etree.XMLSyntaxError:
+        return None
+    ns = {"ram": RAM_NS}
+    nodes = root.findall(".//ram:OrderReference/ram:IssuerAssignedID", ns)
+    return nodes[0].text.strip() if nodes else None
 
 
 def insert_bt13(xml_bytes: bytes, bt13_value: str) -> bytes:
-    root = parse_xml(xml_bytes)
+    """
+    Insert or update BT-13 (OrderReference/IssuerAssignedID) in the XML.
+    Returns re-serialized XML bytes with correct double-quote declaration.
+    """
+    xml_bytes = strip_bom(xml_bytes)
+    root = etree.fromstring(xml_bytes)
 
-    ta = root.find(f'.//{{{NS_RAM}}}ApplicableHeaderTradeAgreement')
-    if ta is None:
-        raise ValueError(
-            'ApplicableHeaderTradeAgreement nicht gefunden. '
-            'Bitte prüfen Sie das ZUGFeRD-Profil (mind. EN 16931 / EXTENDED).'
+    ns   = {"ram": RAM_NS, "rsm": ZUGFERD_NS}
+    buyer_order_ref_tag = "{%s}BuyerOrderReferencedDocument" % RAM_NS
+
+    # Find SupplyChainTradeTransaction → ApplicableHeaderTradeAgreement
+    transaction = root.find(".//ram:SupplyChainTradeTransaction", {"ram": RAM_NS})
+    if transaction is None:
+        raise ValueError("SupplyChainTradeTransaction not found in XML")
+
+    agreement = transaction.find("ram:ApplicableHeaderTradeAgreement", {"ram": RAM_NS})
+    if agreement is None:
+        raise ValueError("ApplicableHeaderTradeAgreement not found in XML")
+
+    # Check for existing BuyerOrderReferencedDocument
+    buyer_order = agreement.find("ram:BuyerOrderReferencedDocument", {"ram": RAM_NS})
+
+    if buyer_order is None:
+        # Insert new element — position it after SellerOrderReferencedDocument if present
+        buyer_order = etree.SubElement(
+            agreement,
+            "{%s}BuyerOrderReferencedDocument" % RAM_NS
         )
-
-    existing = ta.find(f'{{{NS_RAM}}}BuyerOrderReferencedDocument')
-    if existing is not None:
-        id_el = existing.find(f'{{{NS_RAM}}}IssuerAssignedID')
-        if id_el is None:
-            id_el = etree.SubElement(existing, f'{{{NS_RAM}}}IssuerAssignedID')
-        id_el.text = bt13_value
-    else:
-        buyer_order = etree.Element(f'{{{NS_RAM}}}BuyerOrderReferencedDocument')
-        issuer_id = etree.SubElement(buyer_order, f'{{{NS_RAM}}}IssuerAssignedID')
+        issuer_id = etree.SubElement(
+            buyer_order,
+            "{%s}IssuerAssignedID" % RAM_NS
+        )
         issuer_id.text = bt13_value
-
-        insert_idx = 0
-        for i, child in enumerate(list(ta)):
-            if child.tag in BEFORE_BT13:
-                insert_idx = i + 1
-            elif child.tag in AFTER_BT13:
-                break
-
-        ta.insert(insert_idx, buyer_order)
+    else:
+        issuer_id = buyer_order.find("{%s}IssuerAssignedID" % RAM_NS)
+        if issuer_id is None:
+            issuer_id = etree.SubElement(
+                buyer_order,
+                "{%s}IssuerAssignedID" % RAM_NS
+            )
+        issuer_id.text = bt13_value
 
     return serialize_xml(root)
 
 
-# ── Core processor ──────────────────────────────────────────────────────
-
 def process_pdf(pdf_bytes: bytes, bt13_value: str) -> bytes:
-    # preserve_pdfa=True (pikepdf default) hält PDF/A-Konformitätsmarkierungen
+    """
+    Main processing function:
+    1. Open PDF with pikepdf
+    2. Find embedded ZUGFeRD XML
+    3. Insert/update BT-13
+    4. Write updated XML back to stream
+    5. Update /Params (Size, CheckSum, ModDate)
+    6. Ensure PDF/A-3B XMP metadata
+    7. Return modified PDF bytes
+    """
     pdf = pikepdf.open(io.BytesIO(pdf_bytes))
 
-    filename, file_spec, stream = find_xml_stream(pdf)
-    xml_bytes = stream.read_bytes()
-    modified_xml = insert_bt13(xml_bytes, bt13_value)
+    xml_stream, file_spec = find_xml_stream(pdf)
+    if xml_stream is None:
+        raise ValueError("Kein eingebettetes ZUGFeRD-XML gefunden.")
 
-    # Stream-Inhalt schreiben
-    stream.write(modified_xml)
+    # Read current XML
+    raw_xml = bytes(xml_stream.read_bytes())
 
-    # /Params aktualisieren — KRITISCH für PDF/A-3-Konformität
-    update_ef_params(stream, modified_xml)
+    # Insert BT-13
+    new_xml = insert_bt13(raw_xml, bt13_value)
+
+    # Write back — use write() without filter to avoid re-compression issues
+    xml_stream.write(new_xml, filter=pikepdf.Name("/FlateDecode"))
+
+    # FIX 1+2: Update /Params with correct Size, CheckSum, ModDate
+    if file_spec is not None:
+        update_ef_params(file_spec, new_xml)
+
+    # FIX 4: Ensure PDF/A-3B XMP declaration
+    ensure_pdfa3_xmp(pdf)
 
     out = io.BytesIO()
-    # object_stream_mode=preserve: minimiert strukturelle Änderungen am PDF
-    # preserve_pdfa=True (default): behält XMP-/PDF-A-Metadaten
-    pdf.save(out, object_stream_mode=pikepdf.ObjectStreamMode.preserve)
+    pdf.save(
+        out,
+        object_stream_mode=pikepdf.ObjectStreamMode.preserve,
+        preserve_pdfa=True,
+    )
     return out.getvalue()
 
 
-# ── Routes ──────────────────────────────────────────────────────────────
+# ─── Routes ────────────────────────────────────────────────────────────────────
 
-@app.route('/')
+@app.route("/")
 def index():
-    return render_template('index.html')
+    return render_template("index.html")
 
 
-@app.route('/process', methods=['POST'])
+@app.route("/process", methods=["POST"])
 def process():
-    if 'pdf' not in request.files:
-        return jsonify({'error': 'Keine PDF-Datei hochgeladen.'}), 400
+    if "pdf" not in request.files:
+        return jsonify({"error": "Keine PDF-Datei hochgeladen."}), 400
 
-    pdf_file = request.files['pdf']
-    bt13_value = request.form.get('bt13', '').strip()
-
-    if not pdf_file.filename or not pdf_file.filename.lower().endswith('.pdf'):
-        return jsonify({'error': 'Nur PDF-Dateien (.pdf) sind erlaubt.'}), 400
+    pdf_file  = request.files["pdf"]
+    bt13_value = request.form.get("bt13", "").strip()
 
     if not bt13_value:
-        return jsonify({'error': 'BT-13 Bestellnummer darf nicht leer sein.'}), 400
+        return jsonify({"error": "BT-13 Wert fehlt."}), 400
+
+    pdf_bytes = pdf_file.read()
 
     try:
-        result = process_pdf(pdf_file.read(), bt13_value)
-        out_name = pdf_file.filename.rsplit('.', 1)[0] + '_bt13.pdf'
-        return send_file(
-            io.BytesIO(result),
-            mimetype='application/pdf',
-            as_attachment=True,
-            download_name=out_name,
-        )
+        result_bytes = process_pdf(pdf_bytes, bt13_value)
     except ValueError as e:
-        return jsonify({'error': str(e)}), 422
+        return jsonify({"error": str(e)}), 422
     except Exception as e:
-        return jsonify({'error': f'Unbekannter Fehler: {e}'}), 500
+        app.logger.exception("Fehler beim Verarbeiten der PDF")
+        return jsonify({"error": f"Interner Fehler: {str(e)}"}), 500
+
+    original_name = pdf_file.filename or "rechnung.pdf"
+    stem = original_name.rsplit(".", 1)[0] if "." in original_name else original_name
+    output_name = f"{stem}_bt13.pdf"
+
+    return send_file(
+        io.BytesIO(result_bytes),
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=output_name,
+    )
 
 
-@app.route('/debug', methods=['POST'])
-def debug():
-    """Diagnose: zeigt alle eingebetteten Dateien mit XML-Preview und /Params-Inhalt."""
-    if 'pdf' not in request.files:
-        return jsonify({'error': 'Keine PDF-Datei'}), 400
+@app.route("/check", methods=["POST"])
+def check():
+    """Check current BT-13 value in uploaded PDF without modifying it."""
+    if "pdf" not in request.files:
+        return jsonify({"error": "Keine PDF-Datei."}), 400
+
+    pdf_bytes = request.files["pdf"].read()
+
     try:
-        pdf = pikepdf.open(io.BytesIO(request.files['pdf'].read()))
-        ef_root = pdf.Root.Names.EmbeddedFiles
-        pairs = collect_ef_pairs(ef_root)
-        result = []
-        for fn, fs in pairs:
-            entry = {'filename': fn}
-            try:
-                s = _get_ef_stream(fs)
-                raw = s.read_bytes()
-                for bom in (b'\xef\xbb\xbf', b'\xff\xfe', b'\xfe\xff'):
-                    if raw.startswith(bom):
-                        raw = raw[len(bom):]
-                entry['size_bytes'] = len(raw)
-                entry['preview'] = raw[:300].decode('utf-8', errors='replace')
-                # /Params auslesen
-                if '/Params' in s.stream_dict:
-                    p = s.stream_dict['/Params']
-                    entry['params'] = {
-                        'Size': int(p['/Size']) if '/Size' in p else None,
-                        'CheckSum': bytes(p['/CheckSum']).hex() if '/CheckSum' in p else None,
-                        'ModDate': str(p['/ModDate']) if '/ModDate' in p else None,
-                    }
-            except Exception as e:
-                entry['error'] = str(e)
-            result.append(entry)
-        return jsonify({'embedded_files': result})
+        pdf = pikepdf.open(io.BytesIO(pdf_bytes))
+        xml_stream, _ = find_xml_stream(pdf)
+        if xml_stream is None:
+            return jsonify({"bt13": None, "message": "Kein ZUGFeRD-XML gefunden."})
+        raw_xml = bytes(xml_stream.read_bytes())
+        bt13 = get_bt13_value(raw_xml)
+        return jsonify({"bt13": bt13, "message": "OK" if bt13 else "BT-13 nicht vorhanden."})
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({"error": str(e)}), 500
 
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=False)
+@app.route("/debug", methods=["POST"])
+def debug():
+    """Return detailed diagnostic info about the embedded XML and /Params."""
+    if "pdf" not in request.files:
+        return jsonify({"error": "Keine PDF-Datei."}), 400
+
+    pdf_bytes = request.files["pdf"].read()
+
+    try:
+        pdf = pikepdf.open(io.BytesIO(pdf_bytes))
+        xml_stream, file_spec = find_xml_stream(pdf)
+
+        if xml_stream is None:
+            return jsonify({"error": "Kein ZUGFeRD-XML gefunden."})
+
+        raw_xml = bytes(xml_stream.read_bytes())
+        bt13 = get_bt13_value(raw_xml)
+
+        # Read /Params
+        params_info = {}
+        try:
+            ef = file_spec["/EF"]
+            stream = ef.get("/F") or ef.get("/UF")
+            if stream and "/Params" in stream:
+                p = stream["/Params"]
+                params_info = {
+                    "Size":     str(p.get("/Size", "–")),
+                    "ModDate":  str(p.get("/ModDate", "–")),
+                    "CheckSum": str(p.get("/CheckSum", "–")),
+                }
+        except Exception:
+            params_info = {"error": "Konnte /Params nicht lesen"}
+
+        # XMP PDF/A info
+        xmp_info = {}
+        try:
+            with pdf.open_metadata() as meta:
+                xmp_info = {
+                    "pdfaid:part":        meta.get("{%s}part" % PDFA_NS, "–"),
+                    "pdfaid:conformance": meta.get("{%s}conformance" % PDFA_NS, "–"),
+                }
+        except Exception:
+            xmp_info = {"error": "Konnte XMP nicht lesen"}
+
+        return jsonify({
+            "bt13":          bt13,
+            "xml_size_real": len(raw_xml),
+            "params":        params_info,
+            "xmp":           xmp_info,
+            "xml_preview":   raw_xml[:500].decode("utf-8", errors="replace"),
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=False)
