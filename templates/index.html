@@ -1,116 +1,377 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ZUGFeRD BT-13 Einfügen</title>
+  <title>ZUGFeRD BT-13 Tool</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root, [data-theme="light"] {
+      --color-bg:             #f7f6f2;
+      --color-surface:        #ffffff;
+      --color-surface-2:      #f9f8f5;
+      --color-border:         rgba(40,37,29,0.12);
+      --color-divider:        rgba(40,37,29,0.08);
+      --color-text:           #28251d;
+      --color-text-muted:     #7a7974;
+      --color-text-faint:     #bab9b4;
+      --color-primary:        #01696f;
+      --color-primary-hover:  #0c4e54;
+      --color-primary-hi:     #e0edec;
+      --color-success:        #437a22;
+      --color-success-bg:     #edf5e8;
+      --color-error:          #a12c7b;
+      --color-error-bg:       #f9edf5;
+      --color-warning:        #964219;
+      --color-warning-bg:     #fdf3ed;
+      --shadow-sm: 0 1px 3px rgba(40,37,29,.07), 0 1px 2px rgba(40,37,29,.05);
+      --shadow-md: 0 4px 16px rgba(40,37,29,.09), 0 1px 4px rgba(40,37,29,.06);
+      --radius-sm: 0.375rem;
+      --radius-md: 0.5rem;
+      --radius-lg: 0.75rem;
+      --radius-xl: 1rem;
+      --font-body: 'Inter', 'Helvetica Neue', sans-serif;
+      --text-xs:   clamp(0.75rem,  0.7rem  + 0.25vw, 0.875rem);
+      --text-sm:   clamp(0.875rem, 0.8rem  + 0.35vw, 1rem);
+      --text-base: clamp(1rem,     0.95rem + 0.25vw, 1.125rem);
+      --text-lg:   clamp(1.125rem, 1rem    + 0.75vw, 1.5rem);
+      --text-xl:   clamp(1.5rem,   1.2rem  + 1.25vw, 2rem);
+      --transition: 160ms cubic-bezier(0.16,1,0.3,1);
+    }
+
+    [data-theme="dark"] {
+      --color-bg:             #141312;
+      --color-surface:        #1c1b19;
+      --color-surface-2:      #222120;
+      --color-border:         rgba(205,204,202,0.1);
+      --color-divider:        rgba(205,204,202,0.06);
+      --color-text:           #cdccca;
+      --color-text-muted:     #797876;
+      --color-text-faint:     #4a4948;
+      --color-primary:        #4f98a3;
+      --color-primary-hover:  #227f8b;
+      --color-primary-hi:     #1e3133;
+      --color-success:        #6daa45;
+      --color-success-bg:     #1e2d19;
+      --color-error:          #d163a7;
+      --color-error-bg:       #2a1826;
+      --color-warning:        #bb653b;
+      --color-warning-bg:     #2a1c14;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,.25), 0 1px 2px rgba(0,0,0,.18);
+      --shadow-md: 0 4px 16px rgba(0,0,0,.35), 0 1px 4px rgba(0,0,0,.2);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme]) {
+        --color-bg: #141312; --color-surface: #1c1b19; --color-surface-2: #222120;
+        --color-border: rgba(205,204,202,0.1); --color-divider: rgba(205,204,202,0.06);
+        --color-text: #cdccca; --color-text-muted: #797876; --color-text-faint: #4a4948;
+        --color-primary: #4f98a3; --color-primary-hover: #227f8b; --color-primary-hi: #1e3133;
+        --color-success: #6daa45; --color-success-bg: #1e2d19;
+        --color-error: #d163a7; --color-error-bg: #2a1826;
+        --color-warning: #bb653b; --color-warning-bg: #2a1c14;
+        --shadow-sm: 0 1px 3px rgba(0,0,0,.25); --shadow-md: 0 4px 16px rgba(0,0,0,.35);
+      }
+    }
+
+    html { -webkit-font-smoothing: antialiased; scroll-behavior: smooth; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: #f0f2f5;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 2rem;
+      font-family: var(--font-body);
+      font-size: var(--text-base);
+      background: var(--color-bg);
+      color: var(--color-text);
+      min-height: 100dvh;
+      display: grid;
+      place-items: center;
+      padding: 1.5rem;
     }
+
+    /* ── Header bar ── */
+    .topbar {
+      position: fixed; top: 0; left: 0; right: 0; height: 52px; z-index: 100;
+      background: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 1.25rem;
+      box-shadow: var(--shadow-sm);
+    }
+    .topbar-brand { display: flex; align-items: center; gap: 0.5rem; }
+    .topbar-logo { color: var(--color-primary); }
+    .topbar-title {
+      font-size: var(--text-sm); font-weight: 600;
+      color: var(--color-text); letter-spacing: -0.01em;
+    }
+    .topbar-subtitle {
+      font-size: var(--text-xs); color: var(--color-text-muted);
+      border-left: 1px solid var(--color-border); margin-left: 0.5rem;
+      padding-left: 0.5rem;
+    }
+    .theme-toggle {
+      width: 36px; height: 36px; border-radius: var(--radius-md);
+      display: grid; place-items: center;
+      color: var(--color-text-muted); cursor: pointer; border: none;
+      background: transparent;
+      transition: color var(--transition), background var(--transition);
+    }
+    .theme-toggle:hover { background: var(--color-surface-2); color: var(--color-text); }
+
+    /* ── Main card ── */
+    main { margin-top: 52px; width: 100%; max-width: 540px; }
+
     .card {
-      background: #fff;
-      border-radius: 12px;
-      box-shadow: 0 4px 24px rgba(0,0,0,.08);
-      padding: 2.5rem;
-      width: 100%;
-      max-width: 520px;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
     }
-    h1 { font-size: 1.4rem; font-weight: 700; color: #1a1a2e; margin-bottom: .5rem; }
-    .subtitle { font-size: .9rem; color: #666; margin-bottom: 2rem; }
-    .badge {
-      display: inline-block; background: #e8f4fd; color: #1a73e8;
-      font-size: .75rem; font-weight: 600; border-radius: 4px;
-      padding: 2px 8px; margin-left: .5rem; vertical-align: middle;
+    .card-header {
+      padding: 1.5rem 1.5rem 0;
     }
-    label { display: block; font-size: .85rem; font-weight: 600; color: #333; margin-bottom: .4rem; }
-    .field { margin-bottom: 1.4rem; }
+    .card-title { font-size: var(--text-lg); font-weight: 600; letter-spacing: -0.02em; }
+    .card-desc { font-size: var(--text-sm); color: var(--color-text-muted); margin-top: 0.25rem; line-height: 1.5; }
+    .card-body { padding: 1.25rem 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+    .card-footer {
+      padding: 1rem 1.5rem;
+      background: var(--color-surface-2);
+      border-top: 1px solid var(--color-divider);
+    }
+
+    /* ── Drop zone ── */
     .drop-zone {
-      border: 2px dashed #c0c9d4; border-radius: 8px; padding: 2rem;
-      text-align: center; cursor: pointer; transition: border-color .2s, background .2s;
-      color: #888; font-size: .9rem;
+      border: 1.5px dashed var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem 1rem;
+      text-align: center; cursor: pointer;
+      transition: border-color var(--transition), background var(--transition);
+      background: var(--color-surface-2);
+      position: relative;
     }
-    .drop-zone.hover, .drop-zone.has-file { border-color: #1a73e8; background: #f0f7ff; }
-    .drop-zone input[type="file"] { display: none; }
-    .drop-zone .icon { font-size: 2rem; margin-bottom: .5rem; }
-    .drop-zone .file-name { font-weight: 600; color: #1a1a2e; font-size: .95rem; margin-top: .3rem; }
+    .drop-zone:hover, .drop-zone.drag-over {
+      border-color: var(--color-primary); background: var(--color-primary-hi);
+    }
+    .drop-zone.has-file { border-color: var(--color-primary); border-style: solid; background: var(--color-primary-hi); }
+    .drop-zone input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .drop-icon { color: var(--color-text-faint); margin-bottom: 0.5rem; display: flex; justify-content: center; }
+    .drop-zone.has-file .drop-icon { color: var(--color-primary); }
+    .drop-label { font-size: var(--text-sm); color: var(--color-text-muted); }
+    .drop-label u { color: var(--color-primary); }
+    .drop-filename {
+      font-size: var(--text-sm); font-weight: 600; color: var(--color-primary);
+      margin-top: 0.25rem; display: none;
+    }
+    .drop-zone.has-file .drop-label { display: none; }
+    .drop-zone.has-file .drop-filename { display: block; }
+
+    /* ── Field ── */
+    .field { display: flex; flex-direction: column; gap: 0.375rem; }
+    .field label { font-size: var(--text-sm); font-weight: 500; color: var(--color-text); }
+    .field-hint { font-size: var(--text-xs); color: var(--color-text-muted); }
+    .field-badge {
+      display: inline-flex; align-items: center;
+      font-size: 0.7rem; font-weight: 600; letter-spacing: 0.04em;
+      background: var(--color-primary-hi); color: var(--color-primary);
+      padding: 1px 6px; border-radius: 9999px; margin-left: 0.4rem;
+      vertical-align: middle;
+    }
+
     input[type="text"] {
-      width: 100%; padding: .65rem .9rem; border: 1.5px solid #c0c9d4;
-      border-radius: 8px; font-size: .95rem; transition: border-color .2s;
+      width: 100%; padding: 0.6rem 0.75rem;
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-md);
+      font-size: var(--text-sm); font-family: var(--font-body);
+      background: var(--color-surface);
+      color: var(--color-text);
+      transition: border-color var(--transition), box-shadow var(--transition);
     }
-    input[type="text"]:focus { outline: none; border-color: #1a73e8; }
-    .hint { font-size: .78rem; color: #888; margin-top: .35rem; }
-    button[type="submit"] {
-      width: 100%; padding: .8rem; background: #1a73e8; color: #fff;
-      border: none; border-radius: 8px; font-size: 1rem; font-weight: 600;
-      cursor: pointer; transition: background .2s;
+    input[type="text"]::placeholder { color: var(--color-text-faint); }
+    input[type="text"]:focus {
+      outline: none; border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(1,105,111,0.12);
     }
-    button[type="submit"]:hover:not(:disabled) { background: #1557b0; }
-    button[type="submit"]:disabled { background: #a0bde8; cursor: not-allowed; }
-    .status {
-      margin-top: 1.2rem; padding: .8rem 1rem; border-radius: 8px;
-      font-size: .88rem; display: none;
+
+    /* ── Button ── */
+    .btn {
+      display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+      width: 100%; padding: 0.7rem 1rem;
+      background: var(--color-primary); color: #fff;
+      border: none; border-radius: var(--radius-md);
+      font-size: var(--text-sm); font-weight: 600; font-family: var(--font-body);
+      cursor: pointer; transition: background var(--transition), opacity var(--transition);
     }
-    .status.error { background: #fdecea; color: #c0392b; display: block; }
-    .status.success { background: #e8f8f0; color: #27ae60; display: block; }
-    .status.loading { background: #f0f7ff; color: #1a73e8; display: block; }
-    .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid #1a73e8;
-      border-top-color: transparent; border-radius: 50%; animation: spin .7s linear infinite;
-      vertical-align: middle; margin-right: .4rem; }
+    .btn:hover:not(:disabled) { background: var(--color-primary-hover); }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+    .btn:active:not(:disabled) { transform: translateY(1px); }
+
+    /* ── Spinner ── */
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.65s linear infinite;
+      flex-shrink: 0;
+    }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Status ── */
+    .status {
+      display: none; align-items: flex-start; gap: 0.5rem;
+      padding: 0.7rem 0.9rem;
+      border-radius: var(--radius-md);
+      font-size: var(--text-sm); line-height: 1.45;
+    }
+    .status.visible { display: flex; }
+    .status.success { background: var(--color-success-bg); color: var(--color-success); }
+    .status.error   { background: var(--color-error-bg);   color: var(--color-error); }
+    .status.warning { background: var(--color-warning-bg); color: var(--color-warning); }
+    .status-icon { flex-shrink: 0; margin-top: 1px; }
+
+    /* ── Info row ── */
+    .info-row {
+      display: flex; align-items: center; gap: 0.4rem;
+      font-size: var(--text-xs); color: var(--color-text-faint);
+    }
+    .info-row svg { flex-shrink: 0; }
+
+    @media (max-width: 480px) {
+      body { padding: 0.75rem; align-items: flex-start; padding-top: calc(52px + 1rem); }
+      main { margin-top: 0; }
+      .card-header, .card-body, .card-footer { padding-left: 1rem; padding-right: 1rem; }
+    }
   </style>
 </head>
 <body>
-<div class="card">
-  <h1>ZUGFeRD BT-13 Einfügen <span class="badge">Factur-X</span></h1>
-  <p class="subtitle">Fügt das Feld <strong>BT-13 (BuyerOrderReference)</strong> in den eingebetteten XML-Teil einer ZUGFeRD/Factur-X PDF ein.</p>
 
-  <form id="form">
-    <div class="field">
-      <label>ZUGFeRD PDF-Rechnung</label>
-      <div class="drop-zone" id="dropZone">
-        <input type="file" id="pdfInput" name="pdf" accept=".pdf" />
-        <div class="icon">📄</div>
-        <div>PDF hierher ziehen oder <u>auswählen</u></div>
-        <div class="file-name" id="fileName"></div>
+<header class="topbar">
+  <div class="topbar-brand">
+    <svg class="topbar-logo" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+      <polyline points="14 2 14 8 20 8"/>
+      <line x1="9" y1="13" x2="15" y2="13"/>
+      <line x1="9" y1="17" x2="13" y2="17"/>
+    </svg>
+    <span class="topbar-title">ZUGFeRD BT-13 Tool</span>
+    <span class="topbar-subtitle">Factur-X / E-Rechnung</span>
+  </div>
+  <button class="theme-toggle" data-theme-toggle aria-label="Dark Mode umschalten">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </svg>
+  </button>
+</header>
+
+<main>
+  <div class="card">
+    <div class="card-header">
+      <h1 class="card-title">Bestellreferenz einfügen</h1>
+      <p class="card-desc">Fügt <strong>BT-13 (BuyerOrderReference)</strong> in den eingebetteten XML-Teil einer ZUGFeRD- oder Factur-X-Rechnung ein. Das PDF-Sichtbild bleibt unverändert.</p>
+    </div>
+
+    <form id="form" class="card-body" novalidate>
+      <!-- Drop zone -->
+      <div class="field">
+        <label>ZUGFeRD / Factur-X Rechnung</label>
+        <div class="drop-zone" id="dropZone" role="button" tabindex="0" aria-label="PDF-Datei auswählen oder hierher ziehen">
+          <input type="file" id="pdfInput" name="pdf" accept=".pdf" aria-label="PDF auswählen" />
+          <div class="drop-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <polyline points="12 18 12 12"/>
+              <polyline points="9 15 12 12 15 15"/>
+            </svg>
+          </div>
+          <div class="drop-label">PDF hierher ziehen oder <u>auswählen</u></div>
+          <div class="drop-filename" id="fileName"></div>
+        </div>
+      </div>
+
+      <!-- BT-13 input -->
+      <div class="field">
+        <label for="bt13">
+          Bestellnummer
+          <span class="field-badge">BT-13</span>
+        </label>
+        <input type="text" id="bt13" name="bt13"
+               placeholder="z.&thinsp;B. 4400378488"
+               autocomplete="off" spellcheck="false" />
+        <span class="field-hint">Bestellnummer des Käufers aus dem Einkaufssystem (IssuerAssignedID)</span>
+      </div>
+
+      <!-- Status -->
+      <div class="status" id="status" role="alert" aria-live="polite">
+        <span class="status-icon" id="statusIcon"></span>
+        <span id="statusMsg"></span>
+      </div>
+    </form>
+
+    <div class="card-footer">
+      <button type="submit" form="form" class="btn" id="submitBtn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 2v20M2 12l10 10 10-10"/>
+        </svg>
+        PDF verarbeiten &amp; herunterladen
+      </button>
+      <div class="info-row" style="margin-top:.6rem; justify-content:center;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Nur der eingebettete XML-Teil wird geändert &ndash; das Sichtbild bleibt identisch
       </div>
     </div>
-    <div class="field">
-      <label for="bt13">BT-13 – Bestellnummer (BuyerOrderReference)</label>
-      <input type="text" id="bt13" name="bt13" placeholder="z. B. 4400378488" autocomplete="off" />
-      <p class="hint">Die Bestellnummer des Käufers, wie sie im Einkaufssystem hinterlegt ist.</p>
-    </div>
-    <button type="submit" id="submitBtn">PDF verarbeiten &amp; herunterladen</button>
-  </form>
-  <div class="status" id="status"></div>
-</div>
+  </div>
+</main>
 
 <script>
-  const dropZone = document.getElementById('dropZone');
-  const pdfInput = document.getElementById('pdfInput');
-  const fileName = document.getElementById('fileName');
-  const form     = document.getElementById('form');
-  const status   = document.getElementById('status');
-  const submitBtn = document.getElementById('submitBtn');
+(function () {
+  // ── Theme toggle ─────────────────────────────────────────────────────
+  const html = document.documentElement;
+  const toggle = document.querySelector('[data-theme-toggle]');
+  let theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  html.setAttribute('data-theme', theme);
+  setToggleIcon();
 
-  dropZone.addEventListener('click', () => pdfInput.click());
-  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('hover'); });
-  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('hover'));
+  toggle.addEventListener('click', () => {
+    theme = theme === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', theme);
+    setToggleIcon();
+  });
+
+  function setToggleIcon() {
+    toggle.innerHTML = theme === 'dark'
+      ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>'
+      : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+    toggle.setAttribute('aria-label', 'Zu ' + (theme === 'dark' ? 'Hell' : 'Dunkel') + '-Modus wechseln');
+  }
+
+  // ── Drop zone ─────────────────────────────────────────────────────────
+  const dropZone   = document.getElementById('dropZone');
+  const pdfInput   = document.getElementById('pdfInput');
+  const fileName   = document.getElementById('fileName');
+  const form       = document.getElementById('form');
+  const submitBtn  = document.getElementById('submitBtn');
+  const statusEl   = document.getElementById('status');
+  const statusMsg  = document.getElementById('statusMsg');
+  const statusIcon = document.getElementById('statusIcon');
+
+  dropZone.addEventListener('dragover',  e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
   dropZone.addEventListener('drop', e => {
-    e.preventDefault(); dropZone.classList.remove('hover');
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
     const file = e.dataTransfer.files[0];
-    if (file && file.name.endsWith('.pdf')) {
-      setFile(file);
-    }
+    if (file && file.name.toLowerCase().endsWith('.pdf')) setFile(file);
+    else showStatus('warning', 'Bitte eine PDF-Datei auswählen.');
   });
   pdfInput.addEventListener('change', () => { if (pdfInput.files[0]) setFile(pdfInput.files[0]); });
+
+  // Keyboard accessibility for drop zone
+  dropZone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') pdfInput.click(); });
 
   function setFile(file) {
     const dt = new DataTransfer();
@@ -118,49 +379,68 @@
     pdfInput.files = dt.files;
     fileName.textContent = file.name;
     dropZone.classList.add('has-file');
+    hideStatus();
   }
 
-  function showStatus(type, msg) {
-    status.className = 'status ' + type;
-    status.innerHTML = (type === 'loading' ? '<span class="spinner"></span>' : '') + msg;
-  }
-
+  // ── Form submit ───────────────────────────────────────────────────────
   form.addEventListener('submit', async e => {
     e.preventDefault();
+
     const file = pdfInput.files[0];
     const bt13 = document.getElementById('bt13').value.trim();
 
-    if (!file) return showStatus('error', 'Bitte eine PDF-Datei auswählen.');
-    if (!bt13)  return showStatus('error', 'Bitte einen BT-13 Wert eingeben.');
+    if (!file) return showStatus('error', 'Bitte zuerst eine PDF-Datei auswählen.');
+    if (!bt13)  return showStatus('error', 'Bitte eine Bestellnummer (BT-13) eingeben.');
 
     const data = new FormData();
     data.append('pdf', file);
     data.append('bt13', bt13);
 
     submitBtn.disabled = true;
-    showStatus('loading', 'Verarbeite PDF…');
+    submitBtn.innerHTML = '<span class="spinner"></span> Verarbeite…';
+    hideStatus();
 
     try {
       const resp = await fetch('/process', { method: 'POST', body: data });
+
       if (resp.ok) {
         const blob = await resp.blob();
         const url  = URL.createObjectURL(blob);
         const a    = document.createElement('a');
         a.href = url;
-        a.download = file.name.replace('.pdf', '_bt13.pdf');
+        a.download = file.name.replace(/\.pdf$/i, '_bt13.pdf');
+        document.body.appendChild(a);
         a.click();
+        document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        showStatus('success', '✅ Fertig! Die PDF wurde mit BT-13 ergänzt und heruntergeladen.');
+        showStatus('success', 'Fertig! PDF mit BT-13 wurde heruntergeladen.');
       } else {
-        const err = await resp.json();
-        showStatus('error', '⚠️ ' + (err.error || 'Unbekannter Fehler.'));
+        const err = await resp.json().catch(() => ({ error: `HTTP ${resp.status}` }));
+        showStatus('error', err.error || 'Unbekannter Fehler.');
       }
     } catch (err) {
-      showStatus('error', '⚠️ Netzwerkfehler: ' + err.message);
+      showStatus('error', 'Netzwerkfehler: ' + err.message);
     } finally {
       submitBtn.disabled = false;
+      submitBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v20M2 12l10 10 10-10"/></svg> PDF verarbeiten &amp; herunterladen';
     }
   });
+
+  function showStatus(type, msg) {
+    const icons = {
+      success: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+      error:   '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+      warning: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+    };
+    statusEl.className = 'status visible ' + type;
+    statusIcon.innerHTML = icons[type] || '';
+    statusMsg.textContent = msg;
+  }
+
+  function hideStatus() {
+    statusEl.className = 'status';
+  }
+})();
 </script>
 </body>
 </html>
