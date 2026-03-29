@@ -263,6 +263,47 @@ def index():
     return render_template("index.html", build=BUILD)
 
 
+@app.route("/validate", methods=["POST"])
+def validate():
+    """
+    Validate that the uploaded PDF is a ZUGFeRD/Factur-X invoice and that
+    BT-13 can be inserted.  Returns JSON {ok: true} on success or
+    {error: "..."} on failure.  Does NOT return the modified PDF.
+
+    This endpoint exists so the frontend can check for errors via fetch()
+    before triggering the real download via a native form POST — avoiding
+    the Chrome 'dangerous download' warning that appears when a download
+    is initiated from a programmatic blob: URL click.
+    """
+    if "pdf" not in request.files:
+        return jsonify({"error": "Keine PDF-Datei hochgeladen."}), 400
+
+    pdf_file   = request.files["pdf"]
+    bt13_value = request.form.get("bt13", "").strip()
+
+    if not bt13_value:
+        return jsonify({"error": "BT-13 Wert fehlt."}), 400
+
+    pdf_bytes = pdf_file.read()
+
+    try:
+        # Dry-run: open and locate the XML stream; parse and patch in memory
+        # to surface any errors, but discard the result.
+        pdf = pikepdf.open(io.BytesIO(pdf_bytes))
+        xml_stream, _ = find_xml_stream(pdf)
+        if xml_stream is None:
+            return jsonify({"error": "Kein eingebettetes ZUGFeRD-XML in der PDF gefunden. "
+                                     "Bitte eine ZUGFeRD- oder Factur-X-Rechnung hochladen."}), 422
+        raw_xml = bytes(xml_stream.read_bytes())
+        insert_bt13(raw_xml, bt13_value)   # raises ValueError on bad XML
+        return jsonify({"ok": True})
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 422
+    except Exception as e:
+        app.logger.exception("Fehler beim Validieren der PDF")
+        return jsonify({"error": f"Interner Fehler: {str(e)}"}), 500
+
+
 @app.route("/process", methods=["POST"])
 def process():
     if "pdf" not in request.files:

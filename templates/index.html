@@ -382,7 +382,22 @@
     hideStatus();
   }
 
-  // ── Form submit ───────────────────────────────────────────────────────
+  // ── Form submit ─────────────────────────────────────────────────────────
+  //
+  // Strategy to avoid the Chrome "dangerous download" warning:
+  //
+  // Chrome flags downloads that originate from a programmatic a.click() on a
+  // blob: URL as potentially dangerous because there is no direct user gesture
+  // on the actual download URL. The fix is a two-step approach:
+  //
+  //  1. fetch() /validate  → server validates the PDF and BT-13 without
+  //     returning the full file (returns JSON: {ok:true} or {error:"…"}).
+  //     We show the spinner and any error here.
+  //
+  //  2. On success, submit a hidden <form> with method=POST pointing to
+  //     /process. The browser treats this as a direct user-initiated form
+  //     submission, so Chrome downloads the response without any warning.
+  //
   form.addEventListener('submit', async e => {
     e.preventDefault();
 
@@ -392,6 +407,7 @@
     if (!file) return showStatus('error', 'Bitte zuerst eine PDF-Datei auswählen.');
     if (!bt13)  return showStatus('error', 'Bitte eine Bestellnummer (BT-13) eingeben.');
 
+    // Step 1 — validate via fetch (shows spinner, catches errors)
     const data = new FormData();
     data.append('pdf', file);
     data.append('bt13', bt13);
@@ -400,23 +416,14 @@
     submitBtn.innerHTML = '<span class="spinner"></span> Verarbeite…';
     hideStatus();
 
+    let validationOk = false;
     try {
-      const resp = await fetch('/process', { method: 'POST', body: data });
-
-      if (resp.ok) {
-        const blob = await resp.blob();
-        const url  = URL.createObjectURL(blob);
-        const a    = document.createElement('a');
-        a.href = url;
-        a.download = file.name.replace(/\.pdf$/i, '_bt13.pdf');
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        showStatus('success', 'Fertig! PDF mit BT-13 wurde heruntergeladen.');
+      const resp = await fetch('/validate', { method: 'POST', body: data });
+      const json = await resp.json().catch(() => ({ error: `HTTP ${resp.status}` }));
+      if (resp.ok && json.ok) {
+        validationOk = true;
       } else {
-        const err = await resp.json().catch(() => ({ error: `HTTP ${resp.status}` }));
-        showStatus('error', err.error || 'Unbekannter Fehler.');
+        showStatus('error', json.error || 'Unbekannter Fehler.');
       }
     } catch (err) {
       showStatus('error', 'Netzwerkfehler: ' + err.message);
@@ -424,6 +431,36 @@
       submitBtn.disabled = false;
       submitBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v20M2 12l10 10 10-10"/></svg> PDF verarbeiten &amp; herunterladen';
     }
+
+    if (!validationOk) return;
+
+    // Step 2 — trigger the real download via a hidden form POST so Chrome
+    // treats it as a direct user-initiated navigation (no blob URL involved).
+    showStatus('success', 'Fertig! PDF wird heruntergeladen…');
+    const dlForm = document.createElement('form');
+    dlForm.method  = 'POST';
+    dlForm.action  = '/process';
+    dlForm.enctype = 'multipart/form-data';
+    dlForm.style.display = 'none';
+
+    // Re-attach the file via a new DataTransfer
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.name = 'pdf';
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    fileInput.files = dt.files;
+    dlForm.appendChild(fileInput);
+
+    const bt13Input = document.createElement('input');
+    bt13Input.type  = 'hidden';
+    bt13Input.name  = 'bt13';
+    bt13Input.value = bt13;
+    dlForm.appendChild(bt13Input);
+
+    document.body.appendChild(dlForm);
+    dlForm.submit();
+    document.body.removeChild(dlForm);
   });
 
   function showStatus(type, msg) {
