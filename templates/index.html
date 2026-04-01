@@ -19,398 +19,568 @@
   <meta property="og:url"         content="https://zugferd-bt13.cloud/" />
   <meta property="og:locale"      content="de_DE" />
 
-  <!-- ── Kein Google Fonts (DSGVO) – Inter als System-Font-Stack ── -->
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    :root, [data-theme="light"] {
-      --color-bg:             #f7f6f2;
-      --color-surface:        #ffffff;
-      --color-surface-2:      #f9f8f5;
-      --color-border:         rgba(40,37,29,0.12);
-      --color-divider:        rgba(40,37,29,0.08);
-      --color-text:           #28251d;
-      --color-text-muted:     #7a7974;
-      --color-text-faint:     #bab9b4;
-      --color-primary:        #01696f;
-      --color-primary-hover:  #0c4e54;
-      --color-primary-hi:     #e0edec;
-      --color-success:        #437a22;
-      --color-success-bg:     #edf5e8;
-      --color-error:          #a12c7b;
-      --color-error-bg:       #f9edf5;
-      --color-warning:        #964219;
-      --color-warning-bg:     #fdf3ed;
-      --shadow-sm: 0 1px 3px rgba(40,37,29,.07), 0 1px 2px rgba(40,37,29,.05);
-      --shadow-md: 0 4px 16px rgba(40,37,29,.09), 0 1px 4px rgba(40,37,29,.06);
-      --radius-sm: 0.375rem;
-      --radius-md: 0.5rem;
-      --radius-lg: 0.75rem;
-      --radius-xl: 1rem;
-      --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
-      --text-xs:   clamp(0.75rem,  0.7rem  + 0.25vw, 0.875rem);
-      --text-sm:   clamp(0.875rem, 0.8rem  + 0.35vw, 1rem);
-      --text-base: clamp(1rem,     0.95rem + 0.25vw, 1.125rem);
-      --text-lg:   clamp(1.125rem, 1rem    + 0.75vw, 1.5rem);
-      --text-xl:   clamp(1.5rem,   1.2rem  + 1.25vw, 2rem);
-      --transition: 160ms cubic-bezier(0.16,1,0.3,1);
+    /* ── Design Tokens ─────────────────────────────────────────────────────── */
+    :root {
+      /* Light mode */
+      --bg:              #f4f6f9;
+      --bg-hero:         #eef1f7;
+      --surface:         #ffffff;
+      --surface-2:       #f8f9fb;
+      --border:          rgba(15,23,60,0.1);
+      --divider:         rgba(15,23,60,0.07);
+      --text:            #111827;
+      --text-muted:      #6b7280;
+      --text-faint:      #9ca3af;
+      --accent:          #2563eb;
+      --accent-hover:    #1d4ed8;
+      --accent-light:    #eff6ff;
+      --accent-border:   rgba(37,99,235,0.2);
+      --success:         #15803d;
+      --success-bg:      #f0fdf4;
+      --error:           #b91c1c;
+      --error-bg:        #fef2f2;
+      --warning:         #b45309;
+      --warning-bg:      #fffbeb;
+      --shadow-sm:       0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+      --shadow-md:       0 4px 20px rgba(0,0,0,.07), 0 1px 4px rgba(0,0,0,.05);
+      --shadow-lg:       0 10px 40px rgba(0,0,0,.09), 0 2px 8px rgba(0,0,0,.05);
+      --r-sm:   0.375rem;
+      --r-md:   0.5rem;
+      --r-lg:   0.75rem;
+      --r-xl:   1rem;
+      --r-2xl:  1.25rem;
+      --font:   'Inter', system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+      --ease:   160ms cubic-bezier(0.16,1,0.3,1);
     }
 
     [data-theme="dark"] {
-      --color-bg:             #141312;
-      --color-surface:        #1c1b19;
-      --color-surface-2:      #222120;
-      --color-border:         rgba(205,204,202,0.1);
-      --color-divider:        rgba(205,204,202,0.06);
-      --color-text:           #cdccca;
-      --color-text-muted:     #797876;
-      --color-text-faint:     #4a4948;
-      --color-primary:        #4f98a3;
-      --color-primary-hover:  #227f8b;
-      --color-primary-hi:     #1e3133;
-      --color-success:        #6daa45;
-      --color-success-bg:     #1e2d19;
-      --color-error:          #d163a7;
-      --color-error-bg:       #2a1826;
-      --color-warning:        #bb653b;
-      --color-warning-bg:     #2a1c14;
-      --shadow-sm: 0 1px 3px rgba(0,0,0,.25), 0 1px 2px rgba(0,0,0,.18);
-      --shadow-md: 0 4px 16px rgba(0,0,0,.35), 0 1px 4px rgba(0,0,0,.2);
+      --bg:              #0f1117;
+      --bg-hero:         #131720;
+      --surface:         #1a1d27;
+      --surface-2:       #1f2233;
+      --border:          rgba(255,255,255,0.08);
+      --divider:         rgba(255,255,255,0.05);
+      --text:            #e5e7eb;
+      --text-muted:      #9ca3af;
+      --text-faint:      #4b5563;
+      --accent:          #60a5fa;
+      --accent-hover:    #93c5fd;
+      --accent-light:    rgba(96,165,250,0.1);
+      --accent-border:   rgba(96,165,250,0.25);
+      --success:         #4ade80;
+      --success-bg:      rgba(74,222,128,0.08);
+      --error:           #f87171;
+      --error-bg:        rgba(248,113,113,0.08);
+      --warning:         #fbbf24;
+      --warning-bg:      rgba(251,191,36,0.08);
+      --shadow-sm:       0 1px 3px rgba(0,0,0,.3);
+      --shadow-md:       0 4px 20px rgba(0,0,0,.4);
+      --shadow-lg:       0 10px 40px rgba(0,0,0,.5);
     }
 
-    @media (prefers-color-scheme: dark) {
-      :root:not([data-theme]) {
-        --color-bg: #141312; --color-surface: #1c1b19; --color-surface-2: #222120;
-        --color-border: rgba(205,204,202,0.1); --color-divider: rgba(205,204,202,0.06);
-        --color-text: #cdccca; --color-text-muted: #797876; --color-text-faint: #4a4948;
-        --color-primary: #4f98a3; --color-primary-hover: #227f8b; --color-primary-hi: #1e3133;
-        --color-success: #6daa45; --color-success-bg: #1e2d19;
-        --color-error: #d163a7; --color-error-bg: #2a1826;
-        --color-warning: #bb653b; --color-warning-bg: #2a1c14;
-        --shadow-sm: 0 1px 3px rgba(0,0,0,.25); --shadow-md: 0 4px 16px rgba(0,0,0,.35);
-      }
-    }
-
+    /* ── Base ───────────────────────────────────────────────────────────────── */
     html { -webkit-font-smoothing: antialiased; scroll-behavior: smooth; }
     body {
-      font-family: var(--font-body);
-      font-size: var(--text-base);
-      background: var(--color-bg);
-      color: var(--color-text);
+      font-family: var(--font);
+      font-size: 1rem;
+      background: var(--bg);
+      color: var(--text);
       min-height: 100dvh;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      padding: 1.5rem;
     }
 
-    /* ── Header bar ── */
+    /* ── Topbar ─────────────────────────────────────────────────────────────── */
     .topbar {
-      position: fixed; top: 0; left: 0; right: 0; height: 52px; z-index: 100;
-      background: var(--color-surface);
-      border-bottom: 1px solid var(--color-border);
+      position: sticky; top: 0; z-index: 100;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
       display: flex; align-items: center; justify-content: space-between;
-      padding: 0 1.25rem;
+      padding: 0 1.5rem;
+      height: 56px;
+    }
+    .topbar-brand {
+      display: flex; align-items: center; gap: 0.625rem;
+      text-decoration: none; color: inherit;
+    }
+    .topbar-logo {
+      width: 32px; height: 32px; border-radius: var(--r-md);
+      background: var(--accent); display: grid; place-items: center; flex-shrink: 0;
+    }
+    .topbar-logo svg { color: #fff; }
+    .topbar-name {
+      font-size: 0.9375rem; font-weight: 700; letter-spacing: -0.02em;
+      color: var(--text);
+    }
+    .topbar-sub {
+      font-size: 0.8125rem; color: var(--text-muted);
+      padding-left: 0.625rem; margin-left: 0.5rem;
+      border-left: 1px solid var(--border);
+    }
+    .topbar-actions { display: flex; align-items: center; gap: 0.5rem; }
+    .theme-btn {
+      width: 36px; height: 36px; border-radius: var(--r-md);
+      border: none; background: transparent; cursor: pointer;
+      display: grid; place-items: center;
+      color: var(--text-muted);
+      transition: background var(--ease), color var(--ease);
+    }
+    .theme-btn:hover { background: var(--surface-2); color: var(--text); }
+
+    /* ── Hero ───────────────────────────────────────────────────────────────── */
+    .hero {
+      background: var(--bg-hero);
+      border-bottom: 1px solid var(--border);
+      padding: 3rem 1.5rem 2.5rem;
+      text-align: center;
+    }
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: var(--accent-light);
+      border: 1px solid var(--accent-border);
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      margin-bottom: 1rem;
+    }
+    .hero-title {
+      font-size: clamp(1.75rem, 4vw, 2.5rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      color: var(--text);
+      margin-bottom: 0.875rem;
+    }
+    .hero-title span { color: var(--accent); }
+    .hero-desc {
+      font-size: 1.0625rem;
+      color: var(--text-muted);
+      max-width: 520px;
+      margin: 0 auto 1.75rem;
+      line-height: 1.65;
+    }
+    .hero-chips {
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem;
+    }
+    .chip {
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      font-size: 0.8125rem; font-weight: 500;
+      color: var(--text-muted);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 0.3rem 0.7rem;
+      border-radius: 9999px;
       box-shadow: var(--shadow-sm);
     }
-    .topbar-brand { display: flex; align-items: center; gap: 0.5rem; }
-    .topbar-logo { color: var(--color-primary); }
-    .topbar-title {
-      font-size: var(--text-sm); font-weight: 600;
-      color: var(--color-text); letter-spacing: -0.01em;
-    }
-    .topbar-subtitle {
-      font-size: var(--text-xs); color: var(--color-text-muted);
-      border-left: 1px solid var(--color-border); margin-left: 0.5rem;
-      padding-left: 0.5rem;
-    }
-    .theme-toggle {
-      width: 36px; height: 36px; border-radius: var(--radius-md);
-      display: grid; place-items: center;
-      color: var(--color-text-muted); cursor: pointer; border: none;
-      background: transparent;
-      transition: color var(--transition), background var(--transition);
-    }
-    .theme-toggle:hover { background: var(--color-surface-2); color: var(--color-text); }
+    .chip svg { color: var(--accent); flex-shrink: 0; }
 
-    /* ── Layout ── */
-    .page-wrapper {
-      margin-top: 52px;
-      width: 100%; max-width: 540px;
-      display: flex; flex-direction: column;
+    /* ── Main layout ────────────────────────────────────────────────────────── */
+    .main-wrap {
       flex: 1;
-      gap: 1rem;
-      padding-bottom: 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2.5rem 1.5rem 3rem;
     }
 
-    /* ── Main card ── */
+    /* ── Card ───────────────────────────────────────────────────────────────── */
     .card {
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-xl);
-      box-shadow: var(--shadow-md);
+      width: 100%; max-width: 520px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-2xl);
+      box-shadow: var(--shadow-lg);
       overflow: hidden;
     }
-    .card-header { padding: 1.5rem 1.5rem 0; }
-    .card-title { font-size: var(--text-lg); font-weight: 600; letter-spacing: -0.02em; }
-    .card-desc { font-size: var(--text-sm); color: var(--color-text-muted); margin-top: 0.25rem; line-height: 1.5; }
-    .card-body { padding: 1.25rem 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
-    .card-footer {
-      padding: 1rem 1.5rem;
-      background: var(--color-surface-2);
-      border-top: 1px solid var(--color-divider);
+    .card-head {
+      padding: 1.75rem 1.75rem 0;
+    }
+    .card-head-title {
+      font-size: 1.125rem; font-weight: 700; letter-spacing: -0.02em;
+    }
+    .card-head-desc {
+      font-size: 0.875rem; color: var(--text-muted);
+      margin-top: 0.3rem; line-height: 1.55;
+    }
+    .card-body {
+      padding: 1.375rem 1.75rem;
+      display: flex; flex-direction: column; gap: 1.125rem;
+    }
+    .card-foot {
+      padding: 1.25rem 1.75rem;
+      background: var(--surface-2);
+      border-top: 1px solid var(--divider);
     }
 
-    /* ── Drop zone ── */
+    /* ── Field ──────────────────────────────────────────────────────────────── */
+    .field { display: flex; flex-direction: column; gap: 0.375rem; }
+    .field-label {
+      font-size: 0.875rem; font-weight: 600; color: var(--text);
+      display: flex; align-items: center; gap: 0.4rem;
+    }
+    .badge {
+      font-size: 0.675rem; font-weight: 700; letter-spacing: 0.05em;
+      background: var(--accent-light); color: var(--accent);
+      border: 1px solid var(--accent-border);
+      padding: 1px 6px; border-radius: 9999px;
+    }
+    .field-hint { font-size: 0.8125rem; color: var(--text-faint); }
+
+    /* ── Drop zone ──────────────────────────────────────────────────────────── */
     .drop-zone {
-      border: 1.5px dashed var(--color-border);
-      border-radius: var(--radius-lg);
-      padding: 1.5rem 1rem;
-      text-align: center; cursor: pointer;
-      transition: border-color var(--transition), background var(--transition);
-      background: var(--color-surface-2);
       position: relative;
+      border: 1.5px dashed var(--border);
+      border-radius: var(--r-lg);
+      padding: 1.75rem 1rem;
+      text-align: center; cursor: pointer;
+      background: var(--surface-2);
+      transition: border-color var(--ease), background var(--ease);
     }
     .drop-zone:hover, .drop-zone.drag-over {
-      border-color: var(--color-primary); background: var(--color-primary-hi);
+      border-color: var(--accent); border-style: solid;
+      background: var(--accent-light);
     }
-    .drop-zone.has-file { border-color: var(--color-primary); border-style: solid; background: var(--color-primary-hi); }
+    .drop-zone.has-file {
+      border-color: var(--accent); border-style: solid;
+      background: var(--accent-light);
+    }
     .drop-zone input[type="file"] {
-      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+      position: absolute; inset: 0; opacity: 0; cursor: pointer;
+      width: 100%; height: 100%;
     }
-    .drop-icon { color: var(--color-text-faint); margin-bottom: 0.5rem; display: flex; justify-content: center; }
-    .drop-zone.has-file .drop-icon { color: var(--color-primary); }
-    .drop-label { font-size: var(--text-sm); color: var(--color-text-muted); }
-    .drop-label u { color: var(--color-primary); }
+    .drop-icon {
+      display: flex; justify-content: center; margin-bottom: 0.625rem;
+      color: var(--text-faint);
+    }
+    .drop-zone.has-file .drop-icon { color: var(--accent); }
+    .drop-label { font-size: 0.875rem; color: var(--text-muted); }
+    .drop-label u { color: var(--accent); text-decoration-color: var(--accent-border); }
     .drop-filename {
-      font-size: var(--text-sm); font-weight: 600; color: var(--color-primary);
+      font-size: 0.875rem; font-weight: 600; color: var(--accent);
       margin-top: 0.25rem; display: none;
     }
-    .drop-zone.has-file .drop-label { display: none; }
+    .drop-zone.has-file .drop-label  { display: none; }
     .drop-zone.has-file .drop-filename { display: block; }
 
-    /* ── Field ── */
-    .field { display: flex; flex-direction: column; gap: 0.375rem; }
-    .field label { font-size: var(--text-sm); font-weight: 500; color: var(--color-text); }
-    .field-hint { font-size: var(--text-xs); color: var(--color-text-muted); }
-    .field-badge {
-      display: inline-flex; align-items: center;
-      font-size: 0.7rem; font-weight: 600; letter-spacing: 0.04em;
-      background: var(--color-primary-hi); color: var(--color-primary);
-      padding: 1px 6px; border-radius: 9999px; margin-left: 0.4rem;
-      vertical-align: middle;
-    }
-
+    /* ── Input ──────────────────────────────────────────────────────────────── */
     input[type="text"] {
-      width: 100%; padding: 0.6rem 0.75rem;
-      border: 1.5px solid var(--color-border);
-      border-radius: var(--radius-md);
-      font-size: var(--text-sm); font-family: var(--font-body);
-      background: var(--color-surface);
-      color: var(--color-text);
-      transition: border-color var(--transition), box-shadow var(--transition);
+      width: 100%; padding: 0.625rem 0.875rem;
+      border: 1.5px solid var(--border); border-radius: var(--r-md);
+      font-size: 0.9375rem; font-family: var(--font);
+      background: var(--surface); color: var(--text);
+      transition: border-color var(--ease), box-shadow var(--ease);
     }
-    input[type="text"]::placeholder { color: var(--color-text-faint); }
+    input[type="text"]::placeholder { color: var(--text-faint); }
     input[type="text"]:focus {
-      outline: none; border-color: var(--color-primary);
-      box-shadow: 0 0 0 3px rgba(1,105,111,0.12);
+      outline: none; border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-light);
     }
 
-    /* ── Button ── */
+    /* ── Button ─────────────────────────────────────────────────────────────── */
     .btn {
-      display: flex; align-items: center; justify-content: center; gap: 0.4rem;
-      width: 100%; padding: 0.7rem 1rem;
-      background: var(--color-primary); color: #fff;
-      border: none; border-radius: var(--radius-md);
-      font-size: var(--text-sm); font-weight: 600; font-family: var(--font-body);
-      cursor: pointer; transition: background var(--transition), opacity var(--transition);
+      width: 100%; padding: 0.75rem 1rem;
+      display: flex; align-items: center; justify-content: center; gap: 0.45rem;
+      background: var(--accent); color: #fff;
+      border: none; border-radius: var(--r-md);
+      font-size: 0.9375rem; font-weight: 600; font-family: var(--font);
+      cursor: pointer; letter-spacing: -0.01em;
+      box-shadow: 0 1px 3px rgba(37,99,235,0.35);
+      transition: background var(--ease), box-shadow var(--ease), opacity var(--ease);
     }
-    .btn:hover:not(:disabled) { background: var(--color-primary-hover); }
-    .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+    .btn:hover:not(:disabled) {
+      background: var(--accent-hover);
+      box-shadow: 0 2px 8px rgba(37,99,235,0.4);
+    }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
     .btn:active:not(:disabled) { transform: translateY(1px); }
 
-    /* ── Spinner ── */
+    /* ── Spinner ────────────────────────────────────────────────────────────── */
     .spinner {
-      width: 16px; height: 16px;
-      border: 2px solid rgba(255,255,255,0.4);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin 0.65s linear infinite;
-      flex-shrink: 0;
+      width: 16px; height: 16px; flex-shrink: 0;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff; border-radius: 50%;
+      animation: spin 0.6s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── Status ── */
+    /* ── Status ─────────────────────────────────────────────────────────────── */
     .status {
       display: none; align-items: flex-start; gap: 0.5rem;
-      padding: 0.7rem 0.9rem;
-      border-radius: var(--radius-md);
-      font-size: var(--text-sm); line-height: 1.45;
+      padding: 0.75rem 0.875rem; border-radius: var(--r-md);
+      font-size: 0.875rem; line-height: 1.5;
     }
     .status.visible { display: flex; }
-    .status.success { background: var(--color-success-bg); color: var(--color-success); }
-    .status.error   { background: var(--color-error-bg);   color: var(--color-error); }
-    .status.warning { background: var(--color-warning-bg); color: var(--color-warning); }
+    .status.success { background: var(--success-bg); color: var(--success); }
+    .status.error   { background: var(--error-bg);   color: var(--error); }
+    .status.warning { background: var(--warning-bg); color: var(--warning); }
     .status-icon { flex-shrink: 0; margin-top: 1px; }
 
-    /* ── Info row ── */
+    /* ── Privacy note ───────────────────────────────────────────────────────── */
+    .privacy-note {
+      display: flex; align-items: flex-start; gap: 0.5rem;
+      background: var(--accent-light);
+      border: 1px solid var(--accent-border);
+      border-radius: var(--r-md);
+      padding: 0.75rem 0.875rem;
+      font-size: 0.8125rem; color: var(--text-muted); line-height: 1.55;
+    }
+    .privacy-note svg { color: var(--accent); flex-shrink: 0; margin-top: 1px; }
+    .privacy-note a { color: var(--accent); text-decoration: none; font-weight: 500; }
+    .privacy-note a:hover { text-decoration: underline; }
+
+    /* ── Info row ───────────────────────────────────────────────────────────── */
     .info-row {
-      display: flex; align-items: center; gap: 0.4rem;
-      font-size: var(--text-xs); color: var(--color-text-faint);
+      display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+      margin-top: 0.625rem;
+      font-size: 0.8rem; color: var(--text-faint);
     }
     .info-row svg { flex-shrink: 0; }
 
-    /* ── DSGVO-Hinweis ── */
-    .privacy-note {
-      display: flex; align-items: flex-start; gap: 0.5rem;
-      background: var(--color-primary-hi);
-      border: 1px solid rgba(1,105,111,0.18);
-      border-radius: var(--radius-md);
-      padding: 0.65rem 0.85rem;
-      font-size: var(--text-xs);
-      color: var(--color-primary);
-      line-height: 1.5;
+    /* ── How it works section ───────────────────────────────────────────────── */
+    .how {
+      width: 100%; max-width: 520px;
+      margin-top: 2.5rem;
     }
-    .privacy-note svg { flex-shrink: 0; margin-top: 1px; }
+    .how-title {
+      font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--text-faint);
+      margin-bottom: 1rem; text-align: center;
+    }
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+    }
+    .step {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 1rem 0.875rem;
+      text-align: center;
+      box-shadow: var(--shadow-sm);
+    }
+    .step-num {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--accent-light); color: var(--accent);
+      font-size: 0.75rem; font-weight: 700;
+      display: grid; place-items: center; margin: 0 auto 0.625rem;
+      border: 1px solid var(--accent-border);
+    }
+    .step-label {
+      font-size: 0.8125rem; font-weight: 600; color: var(--text);
+      margin-bottom: 0.25rem;
+    }
+    .step-desc { font-size: 0.75rem; color: var(--text-muted); line-height: 1.5; }
 
-    /* ── Footer ── */
+    /* ── Footer ─────────────────────────────────────────────────────────────── */
     footer {
-      width: 100%; max-width: 540px;
-      padding: 1.25rem 0 0.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 1.25rem;
-      flex-wrap: wrap;
-      font-size: var(--text-xs);
-      color: var(--color-text-faint);
-      border-top: 1px solid var(--color-divider);
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 1.125rem 1.5rem;
+      display: flex; align-items: center; justify-content: center;
+      flex-wrap: wrap; gap: 0.5rem 1.5rem;
+      font-size: 0.8125rem; color: var(--text-faint);
+      text-align: center;
     }
     footer a {
-      color: var(--color-text-muted);
-      text-decoration: none;
-      transition: color var(--transition);
+      color: var(--text-muted); text-decoration: none;
+      transition: color var(--ease);
     }
-    footer a:hover { color: var(--color-primary); }
+    footer a:hover { color: var(--accent); }
 
-    @media (max-width: 480px) {
-      body { padding: 0.75rem; padding-top: calc(52px + 1rem); }
-      .page-wrapper { margin-top: 0; }
-      .card-header, .card-body, .card-footer { padding-left: 1rem; padding-right: 1rem; }
+    /* ── Responsive ─────────────────────────────────────────────────────────── */
+    @media (max-width: 600px) {
+      .topbar-sub { display: none; }
+      .hero { padding: 2rem 1rem 1.75rem; }
+      .main-wrap { padding: 1.5rem 1rem 2.5rem; }
+      .card-head, .card-body, .card-foot { padding-left: 1.25rem; padding-right: 1.25rem; }
+      .steps { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
 
+<!-- ── Topbar ──────────────────────────────────────────────────────── -->
 <header class="topbar">
-  <div class="topbar-brand">
-    <svg class="topbar-logo" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-      <polyline points="14 2 14 8 20 8"/>
-      <line x1="9" y1="13" x2="15" y2="13"/>
-      <line x1="9" y1="17" x2="13" y2="17"/>
-    </svg>
-    <span class="topbar-title">ZUGFeRD BT-13 Tool</span>
-    <span class="topbar-subtitle">Factur-X / E-Rechnung</span>
+  <a class="topbar-brand" href="/" aria-label="ZUGFeRD BT-13 Tool">
+    <div class="topbar-logo" aria-hidden="true">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <line x1="9" y1="13" x2="15" y2="13"/>
+        <line x1="9" y1="17" x2="13" y2="17"/>
+      </svg>
+    </div>
+    <span class="topbar-name">ZUGFeRD BT-13 Tool</span>
+    <span class="topbar-sub">Factur-X / E-Rechnung</span>
+  </a>
+  <div class="topbar-actions">
+    <button class="theme-btn" data-theme-toggle aria-label="Dark Mode umschalten">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      </svg>
+    </button>
   </div>
-  <button class="theme-toggle" data-theme-toggle aria-label="Dark Mode umschalten">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-    </svg>
-  </button>
 </header>
 
-<div class="page-wrapper">
-  <main>
-    <div class="card">
-      <div class="card-header">
-        <h1 class="card-title">Bestellreferenz einfügen</h1>
-        <p class="card-desc">Fügt <strong>BT-13 (BuyerOrderReference)</strong> in den eingebetteten XML-Teil einer ZUGFeRD- oder Factur-X-Rechnung ein. Das PDF-Sichtbild bleibt unverändert.</p>
+<!-- ── Hero ───────────────────────────────────────────────────────── -->
+<section class="hero">
+  <div class="hero-eyebrow">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+    Kostenlos · Kein Login · DSGVO-konform
+  </div>
+  <h1 class="hero-title">
+    Bestellreferenz in<br /><span>E-Rechnungen</span> einfügen
+  </h1>
+  <p class="hero-desc">
+    Fügt die <strong>BT-13 (BuyerOrderReference)</strong> nachträglich in den
+    eingebetteten XML-Teil Ihrer ZUGFeRD- oder Factur-X-Rechnung ein —
+    ohne das PDF-Sichtbild zu verändern.
+  </p>
+  <div class="hero-chips">
+    <span class="chip">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Keine Datenspeicherung
+    </span>
+    <span class="chip">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      ZUGFeRD 2.x / Factur-X
+    </span>
+    <span class="chip">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      Verarbeitung im Browser
+    </span>
+  </div>
+</section>
+
+<!-- ── Main ───────────────────────────────────────────────────────── -->
+<div class="main-wrap">
+
+  <div class="card">
+    <div class="card-head">
+      <h2 class="card-head-title">Rechnung verarbeiten</h2>
+      <p class="card-head-desc">PDF-Rechnung hochladen, Bestellnummer eingeben, fertige Datei herunterladen.</p>
+    </div>
+
+    <form id="form" class="card-body" novalidate>
+
+      <!-- Drop zone -->
+      <div class="field">
+        <label class="field-label" for="pdfInput">ZUGFeRD / Factur-X Rechnung</label>
+        <div class="drop-zone" id="dropZone" role="button" tabindex="0" aria-label="PDF-Datei auswählen oder hierher ziehen">
+          <input type="file" id="pdfInput" name="pdf" accept=".pdf" aria-label="PDF auswählen" />
+          <div class="drop-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <polyline points="12 18 12 12"/>
+              <polyline points="9 15 12 12 15 15"/>
+            </svg>
+          </div>
+          <div class="drop-label">PDF hierher ziehen oder <u>auswählen</u></div>
+          <div class="drop-filename" id="fileName"></div>
+        </div>
       </div>
 
-      <form id="form" class="card-body" novalidate>
-        <!-- Drop zone -->
-        <div class="field">
-          <label>ZUGFeRD / Factur-X Rechnung</label>
-          <div class="drop-zone" id="dropZone" role="button" tabindex="0" aria-label="PDF-Datei auswählen oder hierher ziehen">
-            <input type="file" id="pdfInput" name="pdf" accept=".pdf" aria-label="PDF auswählen" />
-            <div class="drop-icon">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                <polyline points="14 2 14 8 20 8"/>
-                <polyline points="12 18 12 12"/>
-                <polyline points="9 15 12 12 15 15"/>
-              </svg>
-            </div>
-            <div class="drop-label">PDF hierher ziehen oder <u>auswählen</u></div>
-            <div class="drop-filename" id="fileName"></div>
-          </div>
-        </div>
+      <!-- BT-13 -->
+      <div class="field">
+        <label class="field-label" for="bt13">
+          Bestellnummer
+          <span class="badge">BT-13</span>
+        </label>
+        <input type="text" id="bt13" name="bt13"
+               placeholder="z.&thinsp;B. 4400378488"
+               autocomplete="off" spellcheck="false" />
+        <span class="field-hint">Bestellnummer des Käufers aus dem Einkaufssystem (IssuerAssignedID)</span>
+      </div>
 
-        <!-- BT-13 input -->
-        <div class="field">
-          <label for="bt13">
-            Bestellnummer
-            <span class="field-badge">BT-13</span>
-          </label>
-          <input type="text" id="bt13" name="bt13"
-                 placeholder="z.&thinsp;B. 4400378488"
-                 autocomplete="off" spellcheck="false" />
-          <span class="field-hint">Bestellnummer des Käufers aus dem Einkaufssystem (IssuerAssignedID)</span>
-        </div>
+      <!-- Privacy note -->
+      <div class="privacy-note" role="note">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        <span>
+          Ihre Rechnung wird <strong>ausschließlich im Arbeitsspeicher</strong> des Servers
+          verarbeitet und sofort nach dem Download gelöscht. Keine Speicherung, keine Weitergabe.
+          <a href="/impressum#datenschutz">Datenschutzerklärung</a>
+        </span>
+      </div>
 
-        <!-- DSGVO-Hinweis -->
-        <div class="privacy-note" role="note">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-          </svg>
-          <span>Ihre Rechnung wird <strong>ausschließlich im Arbeitsspeicher</strong> verarbeitet und sofort nach dem Download gelöscht. Es werden keine Daten gespeichert oder weitergegeben. <a href="/impressum#datenschutz" style="color:inherit;text-decoration:underline;">Datenschutzerklärung</a></span>
-        </div>
+      <!-- Status -->
+      <div class="status" id="status" role="alert" aria-live="polite">
+        <span class="status-icon" id="statusIcon"></span>
+        <span id="statusMsg"></span>
+      </div>
+    </form>
 
-        <!-- Status -->
-        <div class="status" id="status" role="alert" aria-live="polite">
-          <span class="status-icon" id="statusIcon"></span>
-          <span id="statusMsg"></span>
-        </div>
-      </form>
-
-      <div class="card-footer">
-        <button type="submit" form="form" class="btn" id="submitBtn">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M12 2v20M2 12l10 10 10-10"/>
-          </svg>
-          PDF verarbeiten &amp; herunterladen
-        </button>
-        <div class="info-row" style="margin-top:.6rem; justify-content:center;">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          Nur der eingebettete XML-Teil wird geändert &ndash; das Sichtbild bleibt identisch
-        </div>
+    <div class="card-foot">
+      <button type="submit" form="form" class="btn" id="submitBtn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        PDF verarbeiten &amp; herunterladen
+      </button>
+      <div class="info-row">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Nur der XML-Teil wird geändert – das Sichtbild bleibt identisch
       </div>
     </div>
-  </main>
+  </div>
 
-  <footer>
-    <span>&copy; 2025&ndash;{{ now_year }} Thomas Klaiber</span>
-    <a href="/impressum">Impressum &amp; Datenschutz</a>
-  </footer>
+  <!-- How it works -->
+  <div class="how">
+    <p class="how-title">So funktioniert es</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-label">PDF hochladen</div>
+        <div class="step-desc">ZUGFeRD- oder Factur-X-Rechnung als PDF auswählen</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-label">Nummer eingeben</div>
+        <div class="step-desc">Bestellnummer (BT-13) aus dem Einkaufssystem eintragen</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-label">Download</div>
+        <div class="step-desc">Fertige Rechnung mit eingebetteter Bestellreferenz herunterladen</div>
+      </div>
+    </div>
+  </div>
+
 </div>
+
+<!-- ── Footer ─────────────────────────────────────────────────────── -->
+<footer>
+  <span>&copy; 2025–{{ now_year }} Thomas Klaiber</span>
+  <a href="/impressum">Impressum &amp; Datenschutz</a>
+</footer>
 
 <script>
 (function () {
-  // ── Theme toggle ─────────────────────────────────────────────────────
-  const html = document.documentElement;
+  // ── Theme toggle ──────────────────────────────────────────────────────
+  const html   = document.documentElement;
   const toggle = document.querySelector('[data-theme-toggle]');
   let theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   html.setAttribute('data-theme', theme);
-  setToggleIcon();
+  updateToggleIcon();
 
   toggle.addEventListener('click', () => {
     theme = theme === 'dark' ? 'light' : 'dark';
     html.setAttribute('data-theme', theme);
-    setToggleIcon();
+    updateToggleIcon();
   });
 
-  function setToggleIcon() {
+  function updateToggleIcon() {
     toggle.innerHTML = theme === 'dark'
       ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>'
       : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
@@ -428,7 +598,7 @@
   const statusIcon = document.getElementById('statusIcon');
 
   dropZone.addEventListener('dragover',  e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
-  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('dragleave', ()  => dropZone.classList.remove('drag-over'));
   dropZone.addEventListener('drop', e => {
     e.preventDefault();
     dropZone.classList.remove('drag-over');
@@ -437,7 +607,6 @@
     else showStatus('warning', 'Bitte eine PDF-Datei auswählen.');
   });
   pdfInput.addEventListener('change', () => { if (pdfInput.files[0]) setFile(pdfInput.files[0]); });
-
   dropZone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') pdfInput.click(); });
 
   function setFile(file) {
@@ -452,7 +621,6 @@
   // ── Form submit (Two-Step: validate → form POST) ──────────────────────
   form.addEventListener('submit', async e => {
     e.preventDefault();
-
     const file = pdfInput.files[0];
     const bt13 = document.getElementById('bt13').value.trim();
 
@@ -460,19 +628,19 @@
     if (!bt13)  return showStatus('error', 'Bitte eine Bestellnummer (BT-13) eingeben.');
 
     const data = new FormData();
-    data.append('pdf', file);
+    data.append('pdf',  file);
     data.append('bt13', bt13);
 
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<span class="spinner"></span> Verarbeite…';
     hideStatus();
 
-    let validationOk = false;
+    let ok = false;
     try {
       const resp = await fetch('/validate', { method: 'POST', body: data });
       const json = await resp.json().catch(() => ({ error: `HTTP ${resp.status}` }));
       if (resp.ok && json.ok) {
-        validationOk = true;
+        ok = true;
       } else {
         showStatus('error', json.error || 'Unbekannter Fehler.');
       }
@@ -480,10 +648,10 @@
       showStatus('error', 'Netzwerkfehler: ' + err.message);
     } finally {
       submitBtn.disabled = false;
-      submitBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v20M2 12l10 10 10-10"/></svg> PDF verarbeiten &amp; herunterladen';
+      submitBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> PDF verarbeiten &amp; herunterladen';
     }
 
-    if (!validationOk) return;
+    if (!ok) return;
 
     showStatus('success', 'Fertig! PDF wird heruntergeladen…');
     const dlForm = document.createElement('form');
@@ -491,21 +659,13 @@
     dlForm.action  = '/process';
     dlForm.enctype = 'multipart/form-data';
     dlForm.style.display = 'none';
-
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.name = 'pdf';
-    const dt = new DataTransfer();
-    dt.items.add(file);
-    fileInput.files = dt.files;
-    dlForm.appendChild(fileInput);
-
-    const bt13Input = document.createElement('input');
-    bt13Input.type  = 'hidden';
-    bt13Input.name  = 'bt13';
-    bt13Input.value = bt13;
-    dlForm.appendChild(bt13Input);
-
+    const fi = document.createElement('input');
+    fi.type = 'file'; fi.name = 'pdf';
+    const dt = new DataTransfer(); dt.items.add(file); fi.files = dt.files;
+    dlForm.appendChild(fi);
+    const bi = document.createElement('input');
+    bi.type = 'hidden'; bi.name = 'bt13'; bi.value = bt13;
+    dlForm.appendChild(bi);
     document.body.appendChild(dlForm);
     dlForm.submit();
     document.body.removeChild(dlForm);
@@ -521,10 +681,7 @@
     statusIcon.innerHTML = icons[type] || '';
     statusMsg.textContent = msg;
   }
-
-  function hideStatus() {
-    statusEl.className = 'status';
-  }
+  function hideStatus() { statusEl.className = 'status'; }
 })();
 </script>
 </body>
