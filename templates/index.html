@@ -3,10 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ZUGFeRD BT-13 Tool</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- ── SEO ── -->
+  <title>ZUGFeRD BT-13 Tool – Bestellreferenz in E-Rechnung einfügen</title>
+  <meta name="description" content="Fügt die Bestellreferenz (BT-13 / BuyerOrderReference) in bestehende ZUGFeRD- und Factur-X-Rechnungen ein. Kostenlos, ohne Registrierung, DSGVO-konform – Ihre Daten verlassen nicht den Server." />
+  <meta name="keywords" content="ZUGFeRD, Factur-X, BT-13, BuyerOrderReference, E-Rechnung, XML, Bestellreferenz, Bestellnummer" />
+  <meta name="author" content="Thomas Klaiber" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://zugferd-bt13.srv1528010.hstgr.cloud/" />
+
+  <!-- ── Open Graph ── -->
+  <meta property="og:type"        content="website" />
+  <meta property="og:title"       content="ZUGFeRD BT-13 Tool – Bestellreferenz einfügen" />
+  <meta property="og:description" content="Bestellreferenz (BT-13) nachträglich in ZUGFeRD- und Factur-X-Rechnungen einfügen. DSGVO-konform, keine Datenspeicherung." />
+  <meta property="og:url"         content="https://zugferd-bt13.srv1528010.hstgr.cloud/" />
+  <meta property="og:locale"      content="de_DE" />
+
+  <!-- ── Kein Google Fonts (DSGVO) – Inter als System-Font-Stack ── -->
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -34,7 +47,7 @@
       --radius-md: 0.5rem;
       --radius-lg: 0.75rem;
       --radius-xl: 1rem;
-      --font-body: 'Inter', 'Helvetica Neue', sans-serif;
+      --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
       --text-xs:   clamp(0.75rem,  0.7rem  + 0.25vw, 0.875rem);
       --text-sm:   clamp(0.875rem, 0.8rem  + 0.35vw, 1rem);
       --text-base: clamp(1rem,     0.95rem + 0.25vw, 1.125rem);
@@ -85,8 +98,9 @@
       background: var(--color-bg);
       color: var(--color-text);
       min-height: 100dvh;
-      display: grid;
-      place-items: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       padding: 1.5rem;
     }
 
@@ -119,9 +133,17 @@
     }
     .theme-toggle:hover { background: var(--color-surface-2); color: var(--color-text); }
 
-    /* ── Main card ── */
-    main { margin-top: 52px; width: 100%; max-width: 540px; }
+    /* ── Layout ── */
+    .page-wrapper {
+      margin-top: 52px;
+      width: 100%; max-width: 540px;
+      display: flex; flex-direction: column;
+      flex: 1;
+      gap: 1rem;
+      padding-bottom: 1rem;
+    }
 
+    /* ── Main card ── */
     .card {
       background: var(--color-surface);
       border: 1px solid var(--color-border);
@@ -129,9 +151,7 @@
       box-shadow: var(--shadow-md);
       overflow: hidden;
     }
-    .card-header {
-      padding: 1.5rem 1.5rem 0;
-    }
+    .card-header { padding: 1.5rem 1.5rem 0; }
     .card-title { font-size: var(--text-lg); font-weight: 600; letter-spacing: -0.02em; }
     .card-desc { font-size: var(--text-sm); color: var(--color-text-muted); margin-top: 0.25rem; line-height: 1.5; }
     .card-body { padding: 1.25rem 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
@@ -240,9 +260,42 @@
     }
     .info-row svg { flex-shrink: 0; }
 
+    /* ── DSGVO-Hinweis ── */
+    .privacy-note {
+      display: flex; align-items: flex-start; gap: 0.5rem;
+      background: var(--color-primary-hi);
+      border: 1px solid rgba(1,105,111,0.18);
+      border-radius: var(--radius-md);
+      padding: 0.65rem 0.85rem;
+      font-size: var(--text-xs);
+      color: var(--color-primary);
+      line-height: 1.5;
+    }
+    .privacy-note svg { flex-shrink: 0; margin-top: 1px; }
+
+    /* ── Footer ── */
+    footer {
+      width: 100%; max-width: 540px;
+      padding: 1.25rem 0 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+      font-size: var(--text-xs);
+      color: var(--color-text-faint);
+      border-top: 1px solid var(--color-divider);
+    }
+    footer a {
+      color: var(--color-text-muted);
+      text-decoration: none;
+      transition: color var(--transition);
+    }
+    footer a:hover { color: var(--color-primary); }
+
     @media (max-width: 480px) {
-      body { padding: 0.75rem; align-items: flex-start; padding-top: calc(52px + 1rem); }
-      main { margin-top: 0; }
+      body { padding: 0.75rem; padding-top: calc(52px + 1rem); }
+      .page-wrapper { margin-top: 0; }
       .card-header, .card-body, .card-footer { padding-left: 1rem; padding-right: 1rem; }
     }
   </style>
@@ -267,65 +320,80 @@
   </button>
 </header>
 
-<main>
-  <div class="card">
-    <div class="card-header">
-      <h1 class="card-title">Bestellreferenz einfügen</h1>
-      <p class="card-desc">Fügt <strong>BT-13 (BuyerOrderReference)</strong> in den eingebetteten XML-Teil einer ZUGFeRD- oder Factur-X-Rechnung ein. Das PDF-Sichtbild bleibt unverändert.</p>
-    </div>
+<div class="page-wrapper">
+  <main>
+    <div class="card">
+      <div class="card-header">
+        <h1 class="card-title">Bestellreferenz einfügen</h1>
+        <p class="card-desc">Fügt <strong>BT-13 (BuyerOrderReference)</strong> in den eingebetteten XML-Teil einer ZUGFeRD- oder Factur-X-Rechnung ein. Das PDF-Sichtbild bleibt unverändert.</p>
+      </div>
 
-    <form id="form" class="card-body" novalidate>
-      <!-- Drop zone -->
-      <div class="field">
-        <label>ZUGFeRD / Factur-X Rechnung</label>
-        <div class="drop-zone" id="dropZone" role="button" tabindex="0" aria-label="PDF-Datei auswählen oder hierher ziehen">
-          <input type="file" id="pdfInput" name="pdf" accept=".pdf" aria-label="PDF auswählen" />
-          <div class="drop-icon">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-              <polyline points="14 2 14 8 20 8"/>
-              <polyline points="12 18 12 12"/>
-              <polyline points="9 15 12 12 15 15"/>
-            </svg>
+      <form id="form" class="card-body" novalidate>
+        <!-- Drop zone -->
+        <div class="field">
+          <label>ZUGFeRD / Factur-X Rechnung</label>
+          <div class="drop-zone" id="dropZone" role="button" tabindex="0" aria-label="PDF-Datei auswählen oder hierher ziehen">
+            <input type="file" id="pdfInput" name="pdf" accept=".pdf" aria-label="PDF auswählen" />
+            <div class="drop-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <polyline points="12 18 12 12"/>
+                <polyline points="9 15 12 12 15 15"/>
+              </svg>
+            </div>
+            <div class="drop-label">PDF hierher ziehen oder <u>auswählen</u></div>
+            <div class="drop-filename" id="fileName"></div>
           </div>
-          <div class="drop-label">PDF hierher ziehen oder <u>auswählen</u></div>
-          <div class="drop-filename" id="fileName"></div>
+        </div>
+
+        <!-- BT-13 input -->
+        <div class="field">
+          <label for="bt13">
+            Bestellnummer
+            <span class="field-badge">BT-13</span>
+          </label>
+          <input type="text" id="bt13" name="bt13"
+                 placeholder="z.&thinsp;B. 4400378488"
+                 autocomplete="off" spellcheck="false" />
+          <span class="field-hint">Bestellnummer des Käufers aus dem Einkaufssystem (IssuerAssignedID)</span>
+        </div>
+
+        <!-- DSGVO-Hinweis -->
+        <div class="privacy-note" role="note">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          <span>Ihre Rechnung wird <strong>ausschließlich im Arbeitsspeicher</strong> verarbeitet und sofort nach dem Download gelöscht. Es werden keine Daten gespeichert oder weitergegeben. <a href="/impressum#datenschutz" style="color:inherit;text-decoration:underline;">Datenschutzerklärung</a></span>
+        </div>
+
+        <!-- Status -->
+        <div class="status" id="status" role="alert" aria-live="polite">
+          <span class="status-icon" id="statusIcon"></span>
+          <span id="statusMsg"></span>
+        </div>
+      </form>
+
+      <div class="card-footer">
+        <button type="submit" form="form" class="btn" id="submitBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 2v20M2 12l10 10 10-10"/>
+          </svg>
+          PDF verarbeiten &amp; herunterladen
+        </button>
+        <div class="info-row" style="margin-top:.6rem; justify-content:center;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Nur der eingebettete XML-Teil wird geändert &ndash; das Sichtbild bleibt identisch
         </div>
       </div>
-
-      <!-- BT-13 input -->
-      <div class="field">
-        <label for="bt13">
-          Bestellnummer
-          <span class="field-badge">BT-13</span>
-        </label>
-        <input type="text" id="bt13" name="bt13"
-               placeholder="z.&thinsp;B. 4400378488"
-               autocomplete="off" spellcheck="false" />
-        <span class="field-hint">Bestellnummer des Käufers aus dem Einkaufssystem (IssuerAssignedID)</span>
-      </div>
-
-      <!-- Status -->
-      <div class="status" id="status" role="alert" aria-live="polite">
-        <span class="status-icon" id="statusIcon"></span>
-        <span id="statusMsg"></span>
-      </div>
-    </form>
-
-    <div class="card-footer">
-      <button type="submit" form="form" class="btn" id="submitBtn">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M12 2v20M2 12l10 10 10-10"/>
-        </svg>
-        PDF verarbeiten &amp; herunterladen
-      </button>
-      <div class="info-row" style="margin-top:.6rem; justify-content:center;">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        Nur der eingebettete XML-Teil wird geändert &ndash; das Sichtbild bleibt identisch
-      </div>
     </div>
-  </div>
-</main>
+  </main>
+
+  <footer>
+    <span>&copy; 2025&ndash;{{ now_year }} Thomas Klaiber</span>
+    <a href="/impressum">Impressum &amp; Datenschutz</a>
+  </footer>
+</div>
 
 <script>
 (function () {
@@ -370,7 +438,6 @@
   });
   pdfInput.addEventListener('change', () => { if (pdfInput.files[0]) setFile(pdfInput.files[0]); });
 
-  // Keyboard accessibility for drop zone
   dropZone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') pdfInput.click(); });
 
   function setFile(file) {
@@ -382,22 +449,7 @@
     hideStatus();
   }
 
-  // ── Form submit ─────────────────────────────────────────────────────────
-  //
-  // Strategy to avoid the Chrome "dangerous download" warning:
-  //
-  // Chrome flags downloads that originate from a programmatic a.click() on a
-  // blob: URL as potentially dangerous because there is no direct user gesture
-  // on the actual download URL. The fix is a two-step approach:
-  //
-  //  1. fetch() /validate  → server validates the PDF and BT-13 without
-  //     returning the full file (returns JSON: {ok:true} or {error:"…"}).
-  //     We show the spinner and any error here.
-  //
-  //  2. On success, submit a hidden <form> with method=POST pointing to
-  //     /process. The browser treats this as a direct user-initiated form
-  //     submission, so Chrome downloads the response without any warning.
-  //
+  // ── Form submit (Two-Step: validate → form POST) ──────────────────────
   form.addEventListener('submit', async e => {
     e.preventDefault();
 
@@ -407,7 +459,6 @@
     if (!file) return showStatus('error', 'Bitte zuerst eine PDF-Datei auswählen.');
     if (!bt13)  return showStatus('error', 'Bitte eine Bestellnummer (BT-13) eingeben.');
 
-    // Step 1 — validate via fetch (shows spinner, catches errors)
     const data = new FormData();
     data.append('pdf', file);
     data.append('bt13', bt13);
@@ -434,8 +485,6 @@
 
     if (!validationOk) return;
 
-    // Step 2 — trigger the real download via a hidden form POST so Chrome
-    // treats it as a direct user-initiated navigation (no blob URL involved).
     showStatus('success', 'Fertig! PDF wird heruntergeladen…');
     const dlForm = document.createElement('form');
     dlForm.method  = 'POST';
@@ -443,7 +492,6 @@
     dlForm.enctype = 'multipart/form-data';
     dlForm.style.display = 'none';
 
-    // Re-attach the file via a new DataTransfer
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.name = 'pdf';

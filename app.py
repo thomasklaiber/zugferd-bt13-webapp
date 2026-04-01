@@ -29,7 +29,7 @@ NSMAP = {
 PDFA_NS = "http://www.aiim.org/pdfa/ns/id/"
 XMP_NS  = "adobe:ns:meta/"
 
-BUILD = "1.0.0"
+BUILD = "1.1.0"
 
 
 def _pdf_date_now() -> str:
@@ -260,7 +260,14 @@ def process_pdf(pdf_bytes: bytes, bt13_value: str) -> bytes:
 
 @app.route("/")
 def index():
-    return render_template("index.html", build=BUILD)
+    return render_template("index.html", build=BUILD,
+                           now_year=datetime.now(timezone.utc).year)
+
+
+@app.route("/impressum")
+def impressum():
+    return render_template("impressum.html",
+                           now_year=datetime.now(timezone.utc).year)
 
 
 @app.route("/validate", methods=["POST"])

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Impressum &amp; Datenschutz – ZUGFeRD BT-13 Tool</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0f172a;
+      --surface:   #1e293b;
+      --border:    #334155;
+      --text:      #e2e8f0;
+      --muted:     #94a3b8;
+      --accent:    #6366f1;
+      --accent-h:  #818cf8;
+      --radius:    0.75rem;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem 4rem;
+      line-height: 1.7;
+    }
+
+    .page-wrapper {
+      width: 100%;
+      max-width: 720px;
+      display: flex;
+      flex-direction: column;
+      gap: 2.5rem;
+    }
+
+    /* Back link */
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: var(--accent-h);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: #fff; }
+    .back-link svg { width: 1em; height: 1em; }
+
+    /* Page title */
+    h1 {
+      font-size: clamp(1.6rem, 4vw, 2.2rem);
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.02em;
+    }
+
+    /* Section card */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem 2.25rem;
+    }
+
+    h2 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--accent-h);
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+      letter-spacing: -0.01em;
+    }
+
+    /* Section anchor offset for smooth scroll */
+    h2[id] {
+      scroll-margin-top: 1.5rem;
+    }
+
+    p, li { color: var(--text); font-size: 0.95rem; }
+    p + p  { margin-top: 0.75rem; }
+
+    .address {
+      font-style: normal;
+      line-height: 1.9;
+      color: var(--text);
+      font-size: 0.95rem;
+    }
+
+    a { color: var(--accent-h); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    ul {
+      padding-left: 1.4rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    /* DSGVO badge */
+    .dsgvo-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(99,102,241,0.12);
+      border: 1px solid rgba(99,102,241,0.35);
+      border-radius: 2rem;
+      padding: 0.35rem 0.9rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--accent-h);
+      margin-top: 0.5rem;
+    }
+    .dsgvo-badge svg { width: 1em; height: 1em; flex-shrink: 0; }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    footer a { color: var(--muted); }
+    footer a:hover { color: var(--text); }
+  </style>
+</head>
+<body>
+  <div class="page-wrapper">
+
+    <!-- Back navigation -->
+    <nav>
+      <a href="/" class="back-link">
+        <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path fill-rule="evenodd" d="M17 10a.75.75 0 0 1-.75.75H5.56l4.22 4.22a.75.75 0 1 1-1.06 1.06l-5.5-5.5a.75.75 0 0 1 0-1.06l5.5-5.5a.75.75 0 0 1 1.06 1.06L5.56 9.25H16.25A.75.75 0 0 1 17 10Z" clip-rule="evenodd" />
+        </svg>
+        Zurück zur Anwendung
+      </a>
+    </nav>
+
+    <h1>Impressum &amp; Datenschutz</h1>
+
+    <!-- ── Impressum ──────────────────────────────────────────────── -->
+    <section class="card" id="impressum">
+      <h2 id="impressum-heading">Impressum</h2>
+
+      <p>Angaben gemäß § 5 TMG:</p>
+
+      <address class="address" style="margin-top: 0.75rem;">
+        Thomas Klaiber<br />
+        Albstr. 25<br />
+        89168 Niederstotzingen
+      </address>
+
+      <p style="margin-top: 0.75rem;">
+        E-Mail:
+        <a href="mailto:info@mrnerd.de">info@mrnerd.de</a>
+      </p>
+
+      <p style="margin-top: 1.25rem; font-size: 0.85rem; color: var(--muted);">
+        Verantwortlich für den Inhalt nach § 55 Abs. 2 RStV:<br />
+        Thomas Klaiber, Albstr. 25, 89168 Niederstotzingen
+      </p>
+    </section>
+
+    <!-- ── Datenschutzerklärung ───────────────────────────────────── -->
+    <section class="card" id="datenschutz">
+      <h2 id="datenschutz-heading">Datenschutzerklärung</h2>
+
+      <div class="dsgvo-badge">
+        <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path fill-rule="evenodd" d="M10 1a4.5 4.5 0 0 0-4.5 4.5V9H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-.5V5.5A4.5 4.5 0 0 0 10 1Zm3 8V5.5a3 3 0 1 0-6 0V9h6Z" clip-rule="evenodd" />
+        </svg>
+        DSGVO-konform – keine Datenspeicherung
+      </div>
+
+      <p style="margin-top: 1.25rem;">
+        Der Schutz Ihrer persönlichen Daten ist uns ein wichtiges Anliegen.
+        Diese Datenschutzerklärung erläutert, wie diese Webanwendung mit Daten umgeht.
+      </p>
+
+      <h2 id="verantwortlicher" style="margin-top: 1.5rem;">Verantwortlicher</h2>
+      <p>
+        Thomas Klaiber, Albstr. 25, 89168 Niederstotzingen<br />
+        E-Mail: <a href="mailto:info@mrnerd.de">info@mrnerd.de</a>
+      </p>
+
+      <h2 id="datenerhebung" style="margin-top: 1.5rem;">Erhebung und Verarbeitung von Daten</h2>
+      <p>
+        Diese Anwendung verarbeitet ausschließlich Daten, die Sie aktiv übermitteln
+        (hochgeladene PDF-Datei sowie den eingegebenen BT-13-Wert). Die Verarbeitung
+        erfolgt <strong>vollständig im Arbeitsspeicher</strong> des Servers. Es werden
+        <strong>keine Dateien auf dem Server gespeichert</strong>, keine Datenbanken
+        beschrieben und keine Daten an Dritte weitergegeben.
+      </p>
+      <p>
+        Nach Abschluss der Verarbeitung wird die modifizierte PDF-Datei direkt an Ihren
+        Browser zurückgesendet. Auf dem Server verbleiben danach keinerlei Nutzdaten.
+      </p>
+
+      <h2 id="keine-cookies" style="margin-top: 1.5rem;">Cookies und Tracking</h2>
+      <p>
+        Diese Webanwendung verwendet <strong>keine Cookies</strong>, kein Tracking,
+        keine Analyse-Dienste (z. B. Google Analytics) und keine Social-Media-Plugins.
+        Es werden keine Nutzerprofile erstellt.
+      </p>
+
+      <h2 id="server-logs" style="margin-top: 1.5rem;">Server-Logs</h2>
+      <p>
+        Der Webserver protokolliert keine Zugriffslogs mit IP-Adressen. Fehler werden
+        intern geloggt, enthalten jedoch keine personenbezogenen Daten.
+      </p>
+
+      <h2 id="externe-dienste" style="margin-top: 1.5rem;">Externe Dienste</h2>
+      <p>
+        Es werden <strong>keine externen Ressourcen</strong> (z. B. Google Fonts, CDNs,
+        externe APIs) geladen. Alle Schriften und Stile sind im Quellcode der Seite
+        eingebettet. Es findet daher keine Verbindung zu Drittservern statt, die Ihre
+        IP-Adresse übermitteln könnte.
+      </p>
+
+      <h2 id="rechtsgrundlage" style="margin-top: 1.5rem;">Rechtsgrundlage der Verarbeitung</h2>
+      <p>
+        Die Verarbeitung der von Ihnen hochgeladenen Daten erfolgt auf Grundlage von
+        Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung / vorvertragliche Maßnahmen),
+        da Sie die Verarbeitung durch aktives Hochladen der Datei anstoßen.
+      </p>
+
+      <h2 id="ihre-rechte" style="margin-top: 1.5rem;">Ihre Rechte</h2>
+      <p>Da keine personenbezogenen Daten dauerhaft gespeichert werden, entfallen
+         typische Auskunfts-, Löschungs- oder Widerspruchsanfragen. Sollten Sie dennoch
+         Fragen zum Datenschutz haben, wenden Sie sich an:</p>
+      <p style="margin-top: 0.5rem;">
+        <a href="mailto:info@mrnerd.de">info@mrnerd.de</a>
+      </p>
+
+      <h2 id="hosting" style="margin-top: 1.5rem;">Hosting</h2>
+      <p>
+        Diese Anwendung wird auf Servern von Hostinger betrieben. Informationen zur
+        Datenverarbeitung durch Hostinger finden Sie in deren
+        <a href="https://www.hostinger.de/privacy-policy" target="_blank" rel="noopener noreferrer">Datenschutzerklärung</a>.
+      </p>
+    </section>
+
+    <footer>
+      <p>&copy; {{ now_year }} Thomas Klaiber &nbsp;·&nbsp; <a href="/">Zurück zur Anwendung</a></p>
+    </footer>
+
+  </div>
+</body>
+</html>
