@@ -1,30 +1,23 @@
 services:
   app:
-    build: .
-    image: zugferd-bt13:latest
-    pull_policy: never
-    # Ports nur für lokale Entwicklung — im Produktivbetrieb via Traefik
-    # ports:
-    #   - "5000:5000"
+    image: ghcr.io/thomasklaiber/zugferd-bt13-webapp:latest
     restart: unless-stopped
     environment:
       - FLASK_ENV=production
     labels:
       - traefik.enable=true
-      # Routing-Regel: Subdomain aus TRAEFIK_HOST (wird von Hostinger gesetzt)
-      - traefik.http.routers.${COMPOSE_PROJECT_NAME}.rule=Host(`${COMPOSE_PROJECT_NAME}.${TRAEFIK_HOST}`)
-      # Nur HTTPS-Entrypoint verwenden
-      - traefik.http.routers.${COMPOSE_PROJECT_NAME}.entrypoints=websecure
-      # Let's Encrypt Zertifikat automatisch beziehen
-      - traefik.http.routers.${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt
+      # HTTPS-Router
+      - traefik.http.routers.zugferd-bt13.rule=Host(`zugferd-bt13.srv1528010.hstgr.cloud`)
+      - traefik.http.routers.zugferd-bt13.entrypoints=websecure
+      - traefik.http.routers.zugferd-bt13.tls.certresolver=letsencrypt
       # HTTP → HTTPS Redirect
-      - traefik.http.routers.${COMPOSE_PROJECT_NAME}-http.rule=Host(`${COMPOSE_PROJECT_NAME}.${TRAEFIK_HOST}`)
-      - traefik.http.routers.${COMPOSE_PROJECT_NAME}-http.entrypoints=web
-      - traefik.http.routers.${COMPOSE_PROJECT_NAME}-http.middlewares=${COMPOSE_PROJECT_NAME}-https-redirect
-      - traefik.http.middlewares.${COMPOSE_PROJECT_NAME}-https-redirect.redirectscheme.scheme=https
-      - traefik.http.middlewares.${COMPOSE_PROJECT_NAME}-https-redirect.redirectscheme.permanent=true
-      # Interner Port der App
-      - traefik.http.services.${COMPOSE_PROJECT_NAME}.loadbalancer.server.port=5000
+      - traefik.http.routers.zugferd-bt13-http.rule=Host(`zugferd-bt13.srv1528010.hstgr.cloud`)
+      - traefik.http.routers.zugferd-bt13-http.entrypoints=web
+      - traefik.http.routers.zugferd-bt13-http.middlewares=zugferd-bt13-https-redirect
+      - traefik.http.middlewares.zugferd-bt13-https-redirect.redirectscheme.scheme=https
+      - traefik.http.middlewares.zugferd-bt13-https-redirect.redirectscheme.permanent=true
+      # Interner App-Port
+      - traefik.http.services.zugferd-bt13.loadbalancer.server.port=5000
     networks:
       - traefik-proxy
     healthcheck:
