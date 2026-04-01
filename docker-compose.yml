@@ -1,6 +1,7 @@
 services:
   app:
     image: ghcr.io/thomasklaiber/zugferd-bt13-webapp:latest
+    pull_policy: always
     restart: unless-stopped
     environment:
       - FLASK_ENV=production
