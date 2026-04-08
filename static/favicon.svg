@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <rect width="32" height="32" rx="7" fill="#2563eb"/>
+  <!-- Document body -->
+  <rect x="7" y="5" width="14" height="18" rx="1.5" fill="white" opacity="0.15"/>
+  <!-- Dog-ear fold -->
+  <path d="M17 5 L21 9 L17 9 Z" fill="white" opacity="0.25"/>
+  <path d="M7 5 h10 l4 4 v14 a1.5 1.5 0 0 1-1.5 1.5 h-11 a1.5 1.5 0 0 1-1.5-1.5 v-17 a1.5 1.5 0 0 1 1.5-1.5z" fill="white" opacity="0.9"/>
+  <path d="M17 5 v4 h4" fill="none" stroke="#2563eb" stroke-width="0.75" opacity="0.5"/>
+  <!-- XML tag symbol -->
+  <text x="11" y="18.5" font-family="monospace" font-size="5.5" font-weight="700" fill="#2563eb" letter-spacing="-0.3">&lt;/&gt;</text>
+</svg>
