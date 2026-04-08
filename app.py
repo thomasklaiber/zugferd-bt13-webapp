@@ -7,6 +7,8 @@ import pikepdf
 from lxml import etree
 
 app = Flask(__name__)
+# Static assets (favicon, icons, manifest) — cache 1 year in production
+app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 60 * 60 * 24 * 365
 
 # ─── Upload size limit: 20 MB ──────────────────────────────────────────────────
 app.config["MAX_CONTENT_LENGTH"] = 20 * 1024 * 1024
@@ -480,6 +482,9 @@ def add_security_headers(response):
         )
     # Remove server version banner
     response.headers.pop("Server", None)
+    # Cache-Control for HTML pages: always revalidate
+    if response.content_type and response.content_type.startswith("text/html"):
+        response.headers["Cache-Control"] = "no-cache, must-revalidate"
     return response
 
 
