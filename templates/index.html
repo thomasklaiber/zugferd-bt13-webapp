@@ -12,6 +12,116 @@
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="https://zugferd-bt13.cloud/" />
 
+  <!-- ── JSON-LD Structured Data ── -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebApplication",
+        "@id": "https://zugferd-bt13.cloud/#app",
+        "name": "ZUGFeRD BT-13 Tool",
+        "url": "https://zugferd-bt13.cloud/",
+        "description": "Fügt die Bestellreferenz (BT-13 / BuyerOrderReference) nachträglich in bestehende ZUGFeRD- und Factur-X-Rechnungen ein. Kostenlos, ohne Registrierung, DSGVO-konform.",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Any",
+        "browserRequirements": "Requires a modern web browser with HTML5 support",
+        "inLanguage": "de-DE",
+        "isAccessibleForFree": true,
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "EUR"
+        },
+        "author": {
+          "@type": "Person",
+          "name": "Thomas Klaiber",
+          "email": "info@mrnerd.de"
+        },
+        "publisher": {
+          "@type": "Person",
+          "name": "Thomas Klaiber"
+        },
+        "featureList": [
+          "BT-13 (BuyerOrderReference) in ZUGFeRD-Rechnungen einfügen",
+          "Factur-X kompatibel",
+          "DSGVO-konform – keine Datenspeicherung",
+          "Kostenlos und ohne Registrierung",
+          "PDF/A-3B konform"
+        ],
+        "screenshot": "https://zugferd-bt13.cloud/",
+        "mainEntityOfPage": {
+          "@type": "WebPage",
+          "@id": "https://zugferd-bt13.cloud/"
+        }
+      },
+      {
+        "@type": "HowTo",
+        "@id": "https://zugferd-bt13.cloud/#howto",
+        "name": "Bestellreferenz (BT-13) in ZUGFeRD-Rechnung einfügen",
+        "description": "Schritt-für-Schritt Anleitung zum Einfügen der Bestellreferenz (BT-13) in eine bestehende ZUGFeRD- oder Factur-X-Rechnung.",
+        "inLanguage": "de-DE",
+        "totalTime": "PT1M",
+        "tool": {
+          "@type": "HowToTool",
+          "name": "ZUGFeRD BT-13 Tool",
+          "url": "https://zugferd-bt13.cloud/"
+        },
+        "step": [
+          {
+            "@type": "HowToStep",
+            "position": 1,
+            "name": "PDF hochladen",
+            "text": "ZUGFeRD- oder Factur-X-Rechnung als PDF auswählen oder per Drag & Drop auf das Uploadfeld ziehen."
+          },
+          {
+            "@type": "HowToStep",
+            "position": 2,
+            "name": "Bestellnummer eingeben",
+            "text": "Die Bestellnummer (BT-13) aus dem Einkaufssystem in das Textfeld eingeben."
+          },
+          {
+            "@type": "HowToStep",
+            "position": 3,
+            "name": "Fertige Rechnung herunterladen",
+            "text": "Auf 'PDF verarbeiten & herunterladen' klicken. Die modifizierte Rechnung mit eingebetteter Bestellreferenz wird sofort heruntergeladen."
+          }
+        ]
+      },
+      {
+        "@type": "FAQPage",
+        "@id": "https://zugferd-bt13.cloud/#faq",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Was ist BT-13 in einer ZUGFeRD-Rechnung?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "BT-13 (BuyerOrderReference / BuyerOrderReferencedDocument/IssuerAssignedID) ist das Pflichtfeld für die Bestellreferenz des Käufers in ZUGFeRD- und Factur-X-Rechnungen nach dem EN 16931 Standard."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Werden meine Rechnungsdaten gespeichert?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Nein. Die Verarbeitung erfolgt ausschließlich im Arbeitsspeicher des Servers. Es werden keine Daten gespeichert, geloggt oder weitergegeben. Der Server protokolliert keine IP-Adressen."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Welche Rechnungsformate werden unterstützt?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Das Tool unterstützt ZUGFeRD 2.x und Factur-X Rechnungen (PDF/A-3 mit eingebettetem CII XML nach UN/CEFACT). Das PDF-Sichtbild bleibt dabei unverändert."
+            }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
+
   <!-- ── Open Graph ── -->
   <meta property="og:type"        content="website" />
   <meta property="og:title"       content="ZUGFeRD BT-13 Tool – Bestellreferenz einfügen" />

@@ -2,7 +2,7 @@ import io
 import os
 import hashlib
 from datetime import datetime, timezone
-from flask import Flask, request, jsonify, render_template, send_file
+from flask import Flask, request, jsonify, render_template, send_file, Response, make_response
 import pikepdf
 from lxml import etree
 
@@ -29,7 +29,8 @@ NSMAP = {
 PDFA_NS = "http://www.aiim.org/pdfa/ns/id/"
 XMP_NS  = "adobe:ns:meta/"
 
-BUILD = "1.1.0"
+BUILD = "1.2.0"
+SITE_URL = "https://zugferd-bt13.cloud"
 
 
 def _pdf_date_now() -> str:
@@ -270,6 +271,40 @@ def impressum():
                            now_year=datetime.now(timezone.utc).year)
 
 
+@app.route("/robots.txt")
+def robots_txt():
+    content = (
+        "User-agent: *\n"
+        "Allow: /\n"
+        "Disallow: /validate\n"
+        "Disallow: /process\n"
+        "Disallow: /check\n"
+        "Disallow: /debug\n"
+        f"Sitemap: {SITE_URL}/sitemap.xml\n"
+    )
+    return Response(content, mimetype="text/plain")
+
+
+@app.route("/sitemap.xml")
+def sitemap_xml():
+    content = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        f'  <url>\n'
+        f'    <loc>{SITE_URL}/</loc>\n'
+        f'    <changefreq>monthly</changefreq>\n'
+        f'    <priority>1.0</priority>\n'
+        f'  </url>\n'
+        f'  <url>\n'
+        f'    <loc>{SITE_URL}/impressum</loc>\n'
+        f'    <changefreq>yearly</changefreq>\n'
+        f'    <priority>0.1</priority>\n'
+        f'  </url>\n'
+        '</urlset>\n'
+    )
+    return Response(content, mimetype="application/xml")
+
+
 @app.route("/validate", methods=["POST"])
 def validate():
     """
@@ -417,6 +452,35 @@ def debug():
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+# ─── Security Headers ──────────────────────────────────────────────────────────
+@app.after_request
+def add_security_headers(response):
+    # Prevent clickjacking
+    response.headers["X-Frame-Options"] = "DENY"
+    # Prevent MIME-type sniffing
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    # Referrer policy – no referrer for cross-origin requests
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    # Permissions policy – disable unused browser features
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    # Strict Transport Security (HSTS) – 1 year, include subdomains
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    # Content Security Policy – no external resources, no inline scripts except ours
+    if response.content_type and response.content_type.startswith("text/html"):
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline'; "
+            "style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' data:; "
+            "font-src 'self'; "
+            "connect-src 'self'; "
+            "frame-ancestors 'none';"
+        )
+    # Remove server version banner
+    response.headers.pop("Server", None)
+    return response
 
 
 @app.errorhandler(413)
