@@ -118,6 +118,14 @@
           },
           {
             "@type": "Question",
+            "name": "Warum unterstützt lexoffice BT-13 nicht?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Rechnungsprogramme wie lexoffice, sevdesk oder Billomat haben das Pflichtfeld BT-13 (BuyerOrderReference) bislang nicht implementiert, obwohl viele Großunternehmen und öffentliche Auftraggeber dieses Feld in eingehenden ZUGFeRD-Rechnungen verlangen. Dieses Tool schließt diese Lücke, indem es die Bestellreferenz nachträglich in das eingebettete XML einfügt, ohne die PDF-Datei visuell zu verändern."
+            }
+          },
+          {
+            "@type": "Question",
             "name": "Welche Rechnungsformate werden unterstützt?",
             "acceptedAnswer": {
               "@type": "Answer",
@@ -557,8 +565,11 @@
     Bestellreferenz in<br /><span>E-Rechnungen</span> einfügen
   </h1>
   <p class="hero-desc">
-    Fügt die <strong>BT-13 (BuyerOrderReference)</strong> nachträglich in den
-    eingebetteten XML-Teil Ihrer ZUGFeRD- oder Factur-X-Rechnung ein —
+    Viele Rechnungsprogramme wie <strong>lexoffice</strong> unterstützen das
+    Pflichtfeld <strong>BT-13 (BuyerOrderReference)</strong> bis heute nicht —
+    obwohl es von zahlreichen Rechnungsempfängern gefordert wird.
+    Dieses Tool fügt die Bestellreferenz nachträglich in den eingebetteten
+    XML-Teil Ihrer ZUGFeRD- oder Factur-X-Rechnung ein,
     ohne das PDF-Sichtbild zu verändern.
   </p>
   <div class="hero-chips">
@@ -569,6 +580,10 @@
     <span class="chip">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
       ZUGFeRD 2.x / Factur-X
+    </span>
+    <span class="chip">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      lexoffice-Lücke schließen
     </span>
     <span class="chip">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
