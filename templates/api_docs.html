@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="index, follow" />
+  <title>API-Dokumentation – ZUGFeRD BT-13 Tool</title>
+  <meta name="description" content="REST-API Dokumentation für das ZUGFeRD BT-13 Tool. BT-13 (BuyerOrderReference) per API in ZUGFeRD-Rechnungen einfügen – ideal für n8n, Make und andere Automations-Plattformen." />
+  <link rel="canonical" href="https://zugferd-bt13.cloud/api/docs" />
+
+  <!-- Favicons -->
+  <link rel="icon" href="/static/favicon.ico" sizes="any" />
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/static/apple-touch-icon.png" />
+  <link rel="manifest" href="/static/site.webmanifest" />
+  <meta name="theme-color" content="#2563eb" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#1d4ed8" media="(prefers-color-scheme: dark)" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:            #f4f6f9;
+      --bg-hero:       #eef1f7;
+      --surface:       #ffffff;
+      --surface-2:     #f8f9fb;
+      --border:        rgba(15,23,60,0.1);
+      --divider:       rgba(15,23,60,0.07);
+      --text:          #111827;
+      --text-muted:    #6b7280;
+      --text-faint:    #9ca3af;
+      --accent:        #2563eb;
+      --accent-hover:  #1d4ed8;
+      --accent-light:  #eff6ff;
+      --accent-border: rgba(37,99,235,0.2);
+      --green:         #15803d;
+      --green-bg:      #f0fdf4;
+      --green-border:  rgba(21,128,61,0.2);
+      --orange:        #c2410c;
+      --orange-bg:     #fff7ed;
+      --orange-border: rgba(194,65,12,0.2);
+      --code-bg:       #1e293b;
+      --code-text:     #e2e8f0;
+      --shadow-sm:     0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+      --shadow-md:     0 4px 20px rgba(0,0,0,.07), 0 1px 4px rgba(0,0,0,.05);
+      --r-md: 0.5rem; --r-lg: 0.75rem; --r-xl: 1rem; --r-2xl: 1.25rem;
+      --font: 'Inter', system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+      --mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', ui-monospace, 'Courier New', monospace;
+      --ease: 160ms cubic-bezier(0.16,1,0.3,1);
+    }
+    [data-theme="dark"] {
+      --bg:            #0f1117;
+      --bg-hero:       #131720;
+      --surface:       #1a1d27;
+      --surface-2:     #1f2233;
+      --border:        rgba(255,255,255,0.08);
+      --divider:       rgba(255,255,255,0.05);
+      --text:          #e5e7eb;
+      --text-muted:    #9ca3af;
+      --text-faint:    #4b5563;
+      --accent:        #60a5fa;
+      --accent-hover:  #93c5fd;
+      --accent-light:  rgba(96,165,250,0.1);
+      --accent-border: rgba(96,165,250,0.25);
+      --green:         #4ade80;
+      --green-bg:      rgba(74,222,128,0.08);
+      --green-border:  rgba(74,222,128,0.2);
+      --orange:        #fb923c;
+      --orange-bg:     rgba(251,146,60,0.08);
+      --orange-border: rgba(251,146,60,0.2);
+      --code-bg:       #0d1117;
+      --shadow-sm:     0 1px 3px rgba(0,0,0,.3);
+      --shadow-md:     0 4px 20px rgba(0,0,0,.4);
+    }
+
+    html { -webkit-font-smoothing: antialiased; scroll-behavior: smooth; }
+    body {
+      font-family: var(--font);
+      background: var(--bg); color: var(--text);
+      min-height: 100dvh; display: flex; flex-direction: column;
+      line-height: 1.7;
+    }
+
+    /* ── Topbar ── */
+    .topbar {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 1.5rem; height: 56px;
+    }
+    .topbar-brand { display: flex; align-items: center; gap: .625rem; text-decoration: none; color: inherit; }
+    .topbar-logo {
+      width: 32px; height: 32px; border-radius: var(--r-md);
+      background: var(--accent); display: grid; place-items: center; flex-shrink: 0;
+    }
+    .topbar-logo svg { color: #fff; }
+    .topbar-name { font-size: .9375rem; font-weight: 700; letter-spacing: -.02em; }
+    .topbar-sub {
+      font-size: .8125rem; color: var(--text-muted);
+      padding-left: .625rem; margin-left: .5rem;
+      border-left: 1px solid var(--border);
+    }
+    .topbar-actions { display: flex; align-items: center; gap: .5rem; }
+    .theme-btn {
+      width: 36px; height: 36px; border-radius: var(--r-md);
+      border: none; background: transparent; cursor: pointer;
+      display: grid; place-items: center; color: var(--text-muted);
+      transition: background var(--ease), color var(--ease);
+    }
+    .theme-btn:hover { background: var(--surface-2); color: var(--text); }
+
+    /* ── Page header ── */
+    .page-header {
+      background: var(--bg-hero); border-bottom: 1px solid var(--border);
+      padding: 2.5rem 1.5rem 2rem;
+    }
+    .page-header-inner { max-width: 800px; margin: 0 auto; }
+    .back-link {
+      display: inline-flex; align-items: center; gap: .35rem;
+      font-size: .8125rem; font-weight: 500; color: var(--text-muted);
+      text-decoration: none; margin-bottom: 1.25rem;
+      transition: color var(--ease);
+    }
+    .back-link:hover { color: var(--accent); }
+    .page-title { font-size: clamp(1.5rem, 3.5vw, 2rem); font-weight: 800; letter-spacing: -.03em; }
+    .page-subtitle { font-size: 1rem; color: var(--text-muted); margin-top: .375rem; }
+    .badge-row { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }
+    .badge {
+      display: inline-flex; align-items: center; gap: .35rem;
+      font-size: .75rem; font-weight: 600; padding: .25rem .625rem;
+      border-radius: 9999px; border: 1px solid;
+    }
+    .badge-green { color: var(--green); background: var(--green-bg); border-color: var(--green-border); }
+    .badge-blue  { color: var(--accent); background: var(--accent-light); border-color: var(--accent-border); }
+    .badge-orange{ color: var(--orange); background: var(--orange-bg); border-color: var(--orange-border); }
+
+    /* ── Layout ── */
+    .content-wrap {
+      flex: 1; max-width: 800px; width: 100%;
+      margin: 0 auto; padding: 2rem 1.5rem 3rem;
+      display: flex; flex-direction: column; gap: 1.5rem;
+    }
+
+    /* ── Section card ── */
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r-2xl); box-shadow: var(--shadow-md); overflow: hidden;
+    }
+    .card-head {
+      padding: 1.125rem 1.5rem; border-bottom: 1px solid var(--divider);
+      background: var(--surface-2);
+      display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    }
+    .card-head-left { display: flex; align-items: center; gap: .625rem; }
+    .card-head-icon {
+      width: 30px; height: 30px; border-radius: var(--r-md);
+      background: var(--accent-light); border: 1px solid var(--accent-border);
+      display: grid; place-items: center; flex-shrink: 0; color: var(--accent);
+    }
+    .card-head-title { font-size: .9375rem; font-weight: 700; letter-spacing: -.015em; }
+    .method-badge {
+      font-size: .7rem; font-weight: 800; letter-spacing: .06em;
+      padding: .2rem .55rem; border-radius: var(--r-md);
+      background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border);
+    }
+    .card-body { padding: 1.375rem 1.5rem; display: flex; flex-direction: column; gap: 1.25rem; }
+
+    /* ── Typography ── */
+    p { color: var(--text-muted); font-size: .9375rem; }
+    p + p { margin-top: .625rem; }
+    a { color: var(--accent); text-decoration: none; font-weight: 500; }
+    a:hover { text-decoration: underline; }
+    strong { color: var(--text); font-weight: 600; }
+
+    h3 {
+      font-size: .8125rem; font-weight: 700; letter-spacing: .06em;
+      text-transform: uppercase; color: var(--text-faint); margin-bottom: .625rem;
+    }
+
+    /* ── Endpoint URL display ── */
+    .endpoint-url {
+      display: flex; align-items: center; gap: .75rem;
+      background: var(--code-bg); color: var(--code-text);
+      border-radius: var(--r-lg); padding: .875rem 1.125rem;
+      font-family: var(--mono); font-size: .875rem; font-weight: 500;
+      letter-spacing: .01em; overflow-x: auto;
+    }
+    .endpoint-method {
+      background: var(--green); color: #fff;
+      font-size: .7rem; font-weight: 800; letter-spacing: .08em;
+      padding: .2rem .55rem; border-radius: var(--r-md); flex-shrink: 0;
+    }
+    .endpoint-method.get { background: var(--accent); }
+
+    /* ── Param table ── */
+    .param-table { width: 100%; border-collapse: collapse; font-size: .875rem; }
+    .param-table th {
+      text-align: left; font-size: .75rem; font-weight: 700; letter-spacing: .05em;
+      text-transform: uppercase; color: var(--text-faint);
+      padding: .5rem .75rem; border-bottom: 1px solid var(--border);
+    }
+    .param-table td {
+      padding: .625rem .75rem; border-bottom: 1px solid var(--divider);
+      color: var(--text-muted); vertical-align: top;
+    }
+    .param-table tr:last-child td { border-bottom: none; }
+    .param-name { font-family: var(--mono); color: var(--accent); font-size: .8rem; font-weight: 600; }
+    .param-type { font-family: var(--mono); font-size: .78rem; color: var(--text-faint); }
+    .required-badge {
+      font-size: .65rem; font-weight: 700; letter-spacing: .04em;
+      background: var(--orange-bg); color: var(--orange);
+      border: 1px solid var(--orange-border);
+      padding: 1px 5px; border-radius: 4px; text-transform: uppercase;
+    }
+
+    /* ── Code blocks ── */
+    .code-block {
+      background: var(--code-bg); color: var(--code-text);
+      border-radius: var(--r-lg); padding: 1.125rem 1.25rem;
+      font-family: var(--mono); font-size: .8125rem; line-height: 1.7;
+      overflow-x: auto; position: relative;
+    }
+    .code-block .comment { color: #64748b; }
+    .code-block .key     { color: #93c5fd; }
+    .code-block .str     { color: #86efac; }
+    .code-block .num     { color: #fca5a5; }
+    .code-label {
+      font-size: .7rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+      color: var(--text-faint); margin-bottom: .5rem; display: block;
+    }
+
+    /* ── Response cards ── */
+    .response-grid { display: flex; flex-direction: column; gap: .75rem; }
+    .response-item {
+      border-radius: var(--r-lg); border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .response-head {
+      display: flex; align-items: center; gap: .5rem;
+      padding: .625rem .875rem;
+      background: var(--surface-2); border-bottom: 1px solid var(--divider);
+    }
+    .status-pill {
+      font-family: var(--mono); font-size: .75rem; font-weight: 700;
+      padding: .15rem .5rem; border-radius: var(--r-md);
+    }
+    .status-2xx { background: var(--green-bg); color: var(--green); }
+    .status-4xx { background: var(--orange-bg); color: var(--orange); }
+    .status-5xx { background: #fef2f2; color: #b91c1c; }
+    [data-theme="dark"] .status-5xx { background: rgba(248,113,113,0.08); color: #f87171; }
+    .response-desc { font-size: .8125rem; color: var(--text-muted); }
+    .response-body { padding: .875rem; }
+
+    /* ── n8n Steps ── */
+    .n8n-steps { display: flex; flex-direction: column; gap: .875rem; }
+    .n8n-step { display: flex; gap: .875rem; }
+    .n8n-step-num {
+      width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+      background: var(--accent-light); border: 1px solid var(--accent-border);
+      color: var(--accent); font-size: .75rem; font-weight: 700;
+      display: grid; place-items: center; margin-top: .1rem;
+    }
+    .n8n-step-content { flex: 1; }
+    .n8n-step-title { font-size: .875rem; font-weight: 700; color: var(--text); margin-bottom: .2rem; }
+    .n8n-step-desc { font-size: .8125rem; color: var(--text-muted); line-height: 1.6; }
+    .n8n-step-desc code {
+      font-family: var(--mono); font-size: .78rem;
+      background: var(--surface-2); border: 1px solid var(--border);
+      padding: .1rem .35rem; border-radius: 4px; color: var(--accent);
+    }
+
+    /* ── Info note ── */
+    .info-note {
+      display: flex; gap: .625rem; align-items: flex-start;
+      background: var(--accent-light); border: 1px solid var(--accent-border);
+      border-radius: var(--r-lg); padding: .875rem 1rem;
+      font-size: .875rem; color: var(--text-muted);
+    }
+    .info-note svg { color: var(--accent); flex-shrink: 0; margin-top: 2px; }
+
+    /* ── Footer ── */
+    footer {
+      background: var(--surface); border-top: 1px solid var(--border);
+      padding: 1.125rem 1.5rem;
+      display: flex; align-items: center; justify-content: center;
+      flex-wrap: wrap; gap: .5rem 1.5rem;
+      font-size: .8125rem; color: var(--text-faint); text-align: center;
+    }
+    footer a { color: var(--text-muted); text-decoration: none; transition: color var(--ease); }
+    footer a:hover { color: var(--accent); }
+
+    @media (max-width: 600px) {
+      .topbar-sub { display: none; }
+      .page-header { padding: 1.75rem 1rem 1.5rem; }
+      .content-wrap { padding: 1.25rem 1rem 2.5rem; }
+      .card-body, .card-head { padding-left: 1.125rem; padding-right: 1.125rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Topbar ── -->
+<header class="topbar">
+  <a class="topbar-brand" href="/" aria-label="ZUGFeRD BT-13 Tool">
+    <div class="topbar-logo" aria-hidden="true">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <line x1="9" y1="13" x2="15" y2="13"/>
+        <line x1="9" y1="17" x2="13" y2="17"/>
+      </svg>
+    </div>
+    <span class="topbar-name">ZUGFeRD BT-13 Tool</span>
+    <span class="topbar-sub">API-Dokumentation</span>
+  </a>
+  <div class="topbar-actions">
+    <button class="theme-btn" data-theme-toggle aria-label="Dark Mode umschalten">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<!-- ── Page Header ── -->
+<div class="page-header">
+  <div class="page-header-inner">
+    <a href="/" class="back-link">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+      Zurück zur Anwendung
+    </a>
+    <h1 class="page-title">API-Dokumentation</h1>
+    <p class="page-subtitle">REST-API zum programmatischen Einfügen von BT-13 in ZUGFeRD- und Factur-X-Rechnungen</p>
+    <div class="badge-row">
+      <span class="badge badge-blue">Version {{ build }}</span>
+      <span class="badge badge-green">Keine Authentifizierung</span>
+      <span class="badge badge-orange">Max. 30 Req/min pro IP</span>
+    </div>
+  </div>
+</div>
+
+<div class="content-wrap">
+
+  <!-- ── Überblick ── -->
+  <section class="card">
+    <div class="card-head">
+      <div class="card-head-left">
+        <div class="card-head-icon" aria-hidden="true">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <span class="card-head-title">Überblick</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <p>
+        Die API ermöglicht es, das <strong>BT-13 (BuyerOrderReference)</strong>-Feld nachträglich in den
+        eingebetteten XML-Teil einer ZUGFeRD- oder Factur-X-Rechnung einzufügen —
+        vollständig programmatisch, ohne Browser-Interaktion.
+      </p>
+      <p>
+        <strong>Base URL:</strong>
+      </p>
+      <div class="endpoint-url" style="font-size:.9rem;">https://zugferd-bt13.cloud</div>
+      <div class="info-note">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span>Alle Anfragen werden <strong>ausschließlich im Arbeitsspeicher</strong> verarbeitet. Es werden keine Dateien gespeichert, keine Daten geloggt, keine IP-Adressen protokolliert. DSGVO-konform.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Endpunkte ── -->
+
+  <!-- POST /api/process -->
+  <section class="card" id="api-process">
+    <div class="card-head">
+      <div class="card-head-left">
+        <div class="card-head-icon" aria-hidden="true">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        <span class="card-head-title">BT-13 in PDF einfügen</span>
+      </div>
+      <span class="method-badge">POST</span>
+    </div>
+    <div class="card-body">
+      <div>
+        <span class="code-label">Endpunkt</span>
+        <div class="endpoint-url">
+          <span class="endpoint-method">POST</span>
+          /api/process
+        </div>
+      </div>
+
+      <p>Erwartet eine ZUGFeRD- oder Factur-X-PDF und einen BT-13-Wert. Gibt die modifizierte PDF-Datei zurück.</p>
+
+      <div>
+        <h3>Request — multipart/form-data</h3>
+        <table class="param-table">
+          <thead>
+            <tr><th>Feld</th><th>Typ</th><th>Pflicht</th><th>Beschreibung</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="param-name">pdf</span></td>
+              <td><span class="param-type">file</span></td>
+              <td><span class="required-badge">Pflicht</span></td>
+              <td>ZUGFeRD oder Factur-X PDF-Datei (max. 20 MB)</td>
+            </tr>
+            <tr>
+              <td><span class="param-name">bt13</span></td>
+              <td><span class="param-type">string</span></td>
+              <td><span class="required-badge">Pflicht</span></td>
+              <td>Bestellnummer des Käufers (IssuerAssignedID), z.&thinsp;B. <code style="font-family:var(--mono);font-size:.8rem;">4400378488</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div>
+        <h3>Antworten</h3>
+        <div class="response-grid">
+          <div class="response-item">
+            <div class="response-head">
+              <span class="status-pill status-2xx">200 OK</span>
+              <span class="response-desc">Modifizierte PDF — <code style="font-family:var(--mono);font-size:.78rem;">Content-Type: application/pdf</code></span>
+            </div>
+            <div class="response-body">
+              <p style="font-size:.8125rem;">Die fertige Rechnung als Binär-Download. Der Dateiname lautet <code style="font-family:var(--mono);font-size:.78rem;">&lt;originalname&gt;_bt13.pdf</code>.</p>
+            </div>
+          </div>
+          <div class="response-item">
+            <div class="response-head">
+              <span class="status-pill status-4xx">400 / 422</span>
+              <span class="response-desc">Validierungsfehler — JSON</span>
+            </div>
+            <div class="response-body">
+              <span class="code-label">Beispiel</span>
+              <div class="code-block">{ <span class="key">"error"</span>: <span class="str">"Missing field: bt13"</span>, <span class="key">"code"</span>: <span class="str">"MISSING_BT13"</span> }</div>
+            </div>
+          </div>
+          <div class="response-item">
+            <div class="response-head">
+              <span class="status-pill status-4xx">429</span>
+              <span class="response-desc">Rate Limit erreicht — JSON</span>
+            </div>
+            <div class="response-body">
+              <span class="code-label">Beispiel</span>
+              <div class="code-block">{ <span class="key">"error"</span>: <span class="str">"Rate limit exceeded. Max 30 requests per minute."</span>, <span class="key">"code"</span>: <span class="str">"RATE_LIMITED"</span> }</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h3>Fehlercodes</h3>
+        <table class="param-table">
+          <thead><tr><th>Code</th><th>HTTP</th><th>Bedeutung</th></tr></thead>
+          <tbody>
+            <tr><td><span class="param-name">MISSING_PDF</span></td><td>400</td><td>Kein PDF-Feld im Request</td></tr>
+            <tr><td><span class="param-name">MISSING_BT13</span></td><td>400</td><td>Kein bt13-Feld im Request</td></tr>
+            <tr><td><span class="param-name">EMPTY_BT13</span></td><td>400</td><td>bt13 ist leer</td></tr>
+            <tr><td><span class="param-name">INVALID_FILE_TYPE</span></td><td>400</td><td>Datei ist kein PDF</td></tr>
+            <tr><td><span class="param-name">EMPTY_FILE</span></td><td>400</td><td>PDF-Datei ist leer</td></tr>
+            <tr><td><span class="param-name">PROCESSING_ERROR</span></td><td>422</td><td>PDF ist kein gültiges ZUGFeRD/Factur-X Dokument</td></tr>
+            <tr><td><span class="param-name">RATE_LIMITED</span></td><td>429</td><td>Mehr als 30 Anfragen pro Minute</td></tr>
+            <tr><td><span class="param-name">INTERNAL_ERROR</span></td><td>500</td><td>Unerwarteter Server-Fehler</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div>
+        <h3>curl-Beispiel</h3>
+        <div class="code-block">curl -X POST https://zugferd-bt13.cloud/api/process \
+  -F <span class="str">"pdf=@rechnung.pdf"</span> \
+  -F <span class="str">"bt13=4400378488"</span> \
+  --output rechnung_bt13.pdf</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GET /api/health -->
+  <section class="card" id="api-health">
+    <div class="card-head">
+      <div class="card-head-left">
+        <div class="card-head-icon" aria-hidden="true">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <span class="card-head-title">Health Check</span>
+      </div>
+      <span class="method-badge get">GET</span>
+    </div>
+    <div class="card-body">
+      <div>
+        <span class="code-label">Endpunkt</span>
+        <div class="endpoint-url">
+          <span class="endpoint-method get">GET</span>
+          /api/health
+        </div>
+      </div>
+      <p>Gibt den aktuellen Status des Service zurück. Ideal für Monitoring und als Verbindungstest in n8n.</p>
+      <div>
+        <span class="code-label">Antwort (200 OK)</span>
+        <div class="code-block">{
+  <span class="key">"status"</span>:  <span class="str">"ok"</span>,
+  <span class="key">"version"</span>: <span class="str">"{{ build }}"</span>,
+  <span class="key">"service"</span>: <span class="str">"zugferd-bt13-api"</span>
+}</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── n8n-Anleitung ── -->
+  <section class="card" id="n8n">
+    <div class="card-head">
+      <div class="card-head-left">
+        <div class="card-head-icon" aria-hidden="true">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        </div>
+        <span class="card-head-title">n8n-Integration</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <p>
+        Die API lässt sich direkt mit einem <strong>HTTP Request</strong>-Node in n8n ansprechen.
+        Die PDF kommt als Binärdatei zurück und kann direkt in nachfolgende Nodes weitergegeben werden
+        (z.&thinsp;B. per E-Mail versenden, in Google Drive speichern, etc.).
+      </p>
+
+      <div>
+        <h3>Schritt-für-Schritt</h3>
+        <div class="n8n-steps">
+          <div class="n8n-step">
+            <div class="n8n-step-num">1</div>
+            <div class="n8n-step-content">
+              <div class="n8n-step-title">HTTP Request Node hinzufügen</div>
+              <div class="n8n-step-desc">Node-Typ <code>HTTP Request</code> in den Workflow ziehen. Methode: <code>POST</code>.</div>
+            </div>
+          </div>
+          <div class="n8n-step">
+            <div class="n8n-step-num">2</div>
+            <div class="n8n-step-content">
+              <div class="n8n-step-title">URL eintragen</div>
+              <div class="n8n-step-desc"><code>https://zugferd-bt13.cloud/api/process</code></div>
+            </div>
+          </div>
+          <div class="n8n-step">
+            <div class="n8n-step-num">3</div>
+            <div class="n8n-step-content">
+              <div class="n8n-step-title">Body-Typ auf „Form-Data (Multipart)" stellen</div>
+              <div class="n8n-step-desc">Im Abschnitt <strong>Body</strong> → <strong>Body Content Type</strong>: <code>multipart/form-data</code> wählen.</div>
+            </div>
+          </div>
+          <div class="n8n-step">
+            <div class="n8n-step-num">4</div>
+            <div class="n8n-step-content">
+              <div class="n8n-step-title">Felder konfigurieren</div>
+              <div class="n8n-step-desc">
+                Parameter hinzufügen:<br />
+                • <code>pdf</code> — Typ <code>n8n Binary Data</code>, Property Name des vorherigen Nodes (z.&thinsp;B. <code>data</code>)<br />
+                • <code>bt13</code> — Typ <code>String</code>, Wert z.&thinsp;B. aus vorherigem Node: <code>{{ '{{' }} $json.bestellnummer {{ '}}' }}</code>
+              </div>
+            </div>
+          </div>
+          <div class="n8n-step">
+            <div class="n8n-step-num">5</div>
+            <div class="n8n-step-content">
+              <div class="n8n-step-title">Response als Binärdatei empfangen</div>
+              <div class="n8n-step-desc">Unter <strong>Options</strong> → <strong>Response</strong>: <code>Response Type</code> auf <code>File</code> stellen. Die fertige PDF steht danach als Binary-Property im nächsten Node zur Verfügung.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h3>Beispiel-Workflow (JSON)</h3>
+        <p>Diesen Workflow-JSON direkt in n8n importieren (<strong>Workflows → Import from JSON</strong>):</p>
+        <div class="code-block" style="font-size:.75rem; max-height: 280px; overflow-y: auto;">{
+  <span class="key">"nodes"</span>: [
+    {
+      <span class="key">"name"</span>: <span class="str">"BT-13 einfügen"</span>,
+      <span class="key">"type"</span>: <span class="str">"n8n-nodes-base.httpRequest"</span>,
+      <span class="key">"parameters"</span>: {
+        <span class="key">"method"</span>: <span class="str">"POST"</span>,
+        <span class="key">"url"</span>: <span class="str">"https://zugferd-bt13.cloud/api/process"</span>,
+        <span class="key">"sendBody"</span>: <span class="num">true</span>,
+        <span class="key">"contentType"</span>: <span class="str">"multipart-form-data"</span>,
+        <span class="key">"bodyParameters"</span>: {
+          <span class="key">"parameters"</span>: [
+            { <span class="key">"name"</span>: <span class="str">"pdf"</span>,  <span class="key">"value"</span>: <span class="str">"={{ $binary.data }}"</span>,          <span class="key">"parameterType"</span>: <span class="str">"formBinaryData"</span> },
+            { <span class="key">"name"</span>: <span class="str">"bt13"</span>, <span class="key">"value"</span>: <span class="str">"={{ $json.bestellnummer }}"</span>, <span class="key">"parameterType"</span>: <span class="str">"formData"</span> }
+          ]
+        },
+        <span class="key">"options"</span>: { <span class="key">"response"</span>: { <span class="key">"response"</span>: { <span class="key">"responseFormat"</span>: <span class="str">"file"</span> } } }
+      }
+    }
+  ]
+}</div>
+      </div>
+
+    </div>
+  </section>
+
+</div>
+
+<!-- ── Footer ── -->
+<footer>
+  <span>&copy; 2025–{{ now_year }} Thomas Klaiber</span>
+  <a href="/">Zur Anwendung</a>
+  <a href="/impressum">Impressum &amp; Datenschutz</a>
+</footer>
+
+<script>
+(function () {
+  const html   = document.documentElement;
+  const toggle = document.querySelector('[data-theme-toggle]');
+  let theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  html.setAttribute('data-theme', theme);
+  updateIcon();
+  toggle.addEventListener('click', () => { theme = theme === 'dark' ? 'light' : 'dark'; html.setAttribute('data-theme', theme); updateIcon(); });
+  function updateIcon() {
+    toggle.innerHTML = theme === 'dark'
+      ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>'
+      : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+  }
+})();
+</script>
+</body>
+</html>

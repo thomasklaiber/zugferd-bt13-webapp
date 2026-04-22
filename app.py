@@ -31,8 +31,31 @@ NSMAP = {
 PDFA_NS = "http://www.aiim.org/pdfa/ns/id/"
 XMP_NS  = "adobe:ns:meta/"
 
-BUILD = "1.2.0"
+BUILD = "1.3.0"
 SITE_URL = "https://zugferd-bt13.cloud"
+
+# ─── Simple in-memory rate limiter (no extra dependency) ────────────────────────────
+# Limits the /api/* endpoints to 30 requests per minute per IP.
+import time
+from collections import defaultdict
+import threading
+
+_rate_lock   = threading.Lock()
+_rate_window = 60          # seconds
+_rate_limit  = 30          # max requests per window per IP
+_rate_store: dict[str, list[float]] = defaultdict(list)
+
+def _check_rate_limit(ip: str) -> bool:
+    """Return True if the request is allowed, False if rate-limited."""
+    now = time.monotonic()
+    with _rate_lock:
+        timestamps = _rate_store[ip]
+        # Drop timestamps outside the current window
+        _rate_store[ip] = [t for t in timestamps if now - t < _rate_window]
+        if len(_rate_store[ip]) >= _rate_limit:
+            return False
+        _rate_store[ip].append(now)
+        return True
 
 
 def _pdf_date_now() -> str:
@@ -399,6 +422,89 @@ def check():
         return jsonify({"bt13": bt13, "message": "OK" if bt13 else "BT-13 nicht vorhanden."})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+# ─── API Routes ──────────────────────────────────────────────────────────────────────
+
+@app.route("/api/docs")
+def api_docs():
+    return render_template("api_docs.html",
+                           build=BUILD,
+                           now_year=datetime.now(timezone.utc).year)
+
+
+@app.route("/api/health")
+def api_health():
+    """Simple health-check endpoint — useful for monitoring and n8n credential checks."""
+    return jsonify({
+        "status": "ok",
+        "version": BUILD,
+        "service": "zugferd-bt13-api",
+    })
+
+
+@app.route("/api/process", methods=["POST"])
+def api_process():
+    """
+    REST API endpoint — inserts BT-13 into a ZUGFeRD / Factur-X PDF.
+
+    Request  (multipart/form-data):
+        pdf   — the PDF file
+        bt13  — the BuyerOrderReference value (string)
+
+    Success response:
+        Content-Type: application/pdf
+        Content-Disposition: attachment; filename="<original>_bt13.pdf"
+
+    Error response (JSON):
+        { "error": "<message>", "code": "<machine-readable-code>" }
+        HTTP 400 / 422 / 429 / 500
+    """
+    # Rate limiting
+    client_ip = request.headers.get("X-Forwarded-For", request.remote_addr or "unknown").split(",")[0].strip()
+    if not _check_rate_limit(client_ip):
+        return jsonify({
+            "error": "Rate limit exceeded. Max 30 requests per minute.",
+            "code": "RATE_LIMITED"
+        }), 429
+
+    # Input validation
+    if "pdf" not in request.files:
+        return jsonify({"error": "Missing field: pdf", "code": "MISSING_PDF"}), 400
+    if "bt13" not in request.form:
+        return jsonify({"error": "Missing field: bt13", "code": "MISSING_BT13"}), 400
+
+    bt13_value = request.form["bt13"].strip()
+    if not bt13_value:
+        return jsonify({"error": "Field bt13 must not be empty.", "code": "EMPTY_BT13"}), 400
+
+    uploaded = request.files["pdf"]
+    if not uploaded.filename or not uploaded.filename.lower().endswith(".pdf"):
+        return jsonify({"error": "Uploaded file must be a PDF.", "code": "INVALID_FILE_TYPE"}), 400
+
+    pdf_bytes = uploaded.read()
+    if not pdf_bytes:
+        return jsonify({"error": "Uploaded PDF is empty.", "code": "EMPTY_FILE"}), 400
+
+    # Process
+    try:
+        result_bytes = process_pdf(pdf_bytes, bt13_value)
+    except ValueError as exc:
+        return jsonify({"error": str(exc), "code": "PROCESSING_ERROR"}), 422
+    except Exception as exc:  # noqa: BLE001
+        return jsonify({"error": f"Unexpected error: {exc}", "code": "INTERNAL_ERROR"}), 500
+
+    # Return the modified PDF
+    original_name = uploaded.filename
+    stem = original_name.rsplit(".", 1)[0] if "." in original_name else original_name
+    download_name = f"{stem}_bt13.pdf"
+
+    return send_file(
+        io.BytesIO(result_bytes),
+        mimetype="application/pdf",
+        as_attachment=True,
+        download_name=download_name,
+    )
 
 
 @app.route("/debug", methods=["POST"])
