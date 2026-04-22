@@ -557,7 +557,7 @@
               <div class="n8n-step-desc">
                 Parameter hinzufügen:<br />
                 • <code>pdf</code> — Typ <code>n8n Binary Data</code>, Property Name des vorherigen Nodes (z.&thinsp;B. <code>data</code>)<br />
-                • <code>bt13</code> — Typ <code>String</code>, Wert z.&thinsp;B. aus vorherigem Node: <code>{{ '{{' }} $json.bestellnummer {{ '}}' }}</code>
+                • <code>bt13</code> — Typ <code>String</code>, Wert z.&thinsp;B. aus vorherigem Node: <code>{% raw %}{{ $json.bestellnummer }}{% endraw %}</code>
               </div>
             </div>
           </div>
@@ -586,8 +586,8 @@
         <span class="key">"contentType"</span>: <span class="str">"multipart-form-data"</span>,
         <span class="key">"bodyParameters"</span>: {
           <span class="key">"parameters"</span>: [
-            { <span class="key">"name"</span>: <span class="str">"pdf"</span>,  <span class="key">"value"</span>: <span class="str">"={{ $binary.data }}"</span>,          <span class="key">"parameterType"</span>: <span class="str">"formBinaryData"</span> },
-            { <span class="key">"name"</span>: <span class="str">"bt13"</span>, <span class="key">"value"</span>: <span class="str">"={{ $json.bestellnummer }}"</span>, <span class="key">"parameterType"</span>: <span class="str">"formData"</span> }
+{% raw %}            { <span class="key">"name"</span>: <span class="str">"pdf"</span>,  <span class="key">"value"</span>: <span class="str">"={{ $binary.data }}"</span>,          <span class="key">"parameterType"</span>: <span class="str">"formBinaryData"</span> },
+            { <span class="key">"name"</span>: <span class="str">"bt13"</span>, <span class="key">"value"</span>: <span class="str">"={{ $json.bestellnummer }}"</span>, <span class="key">"parameterType"</span>: <span class="str">"formData"</span> }{% endraw %}
           ]
         },
         <span class="key">"options"</span>: { <span class="key">"response"</span>: { <span class="key">"response"</span>: { <span class="key">"responseFormat"</span>: <span class="str">"file"</span> } } }
