@@ -312,13 +312,21 @@ def robots_txt():
 
 @app.route("/sitemap.xml")
 def sitemap_xml():
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     content = (
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
         f'  <url>\n'
         f'    <loc>{SITE_URL}/</loc>\n'
+        f'    <lastmod>{today}</lastmod>\n'
         f'    <changefreq>monthly</changefreq>\n'
         f'    <priority>1.0</priority>\n'
+        f'  </url>\n'
+        f'  <url>\n'
+        f'    <loc>{SITE_URL}/api/docs</loc>\n'
+        f'    <lastmod>{today}</lastmod>\n'
+        f'    <changefreq>monthly</changefreq>\n'
+        f'    <priority>0.6</priority>\n'
         f'  </url>\n'
         f'  <url>\n'
         f'    <loc>{SITE_URL}/impressum</loc>\n'
